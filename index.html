@@ -135,9 +135,9 @@ summary small{display:block;font-weight:400;color:var(--mute);font-size:14px;mar
 .url{font-size:13px;overflow-wrap:anywhere;color:var(--mute);text-align:center}
 .warn{background:#ffe1a6;border-radius:8px;padding:10px 12px;font-size:15px}
 
-.tabs{position:fixed;left:0;right:0;bottom:0;display:grid;grid-template-columns:repeat(4,1fr);background:var(--night2);
+.tabs{position:fixed;left:0;right:0;bottom:0;display:grid;grid-template-columns:repeat(5,1fr);background:var(--night2);
   border-top:2px solid #3a2a3d;padding:6px 6px calc(6px + env(safe-area-inset-bottom,0px));z-index:5}
-.tabs button{position:relative;border:0;background:none;color:#cbb9c4;font-size:12.5px;font-weight:500;line-height:1.2;padding:6px 2px;min-height:56px;border-radius:8px}
+.tabs button{position:relative;border:0;background:none;color:#cbb9c4;font-size:11.5px;font-weight:500;line-height:1.2;padding:6px 1px;min-height:56px;border-radius:8px}
 .tabs button span{display:block;font-size:21px;margin-bottom:2px}
 .tabs button.on{color:var(--gold);background:#35243a}
 .tabs em{position:absolute;top:2px;left:calc(50% + 8px);font-style:normal;background:#e23d57;color:#fff;font-size:12px;font-weight:700;border-radius:999px;min-width:20px;padding:1px 6px}
@@ -145,6 +145,26 @@ summary small{display:block;font-weight:400;color:var(--mute);font-size:14px;mar
 #toast{position:fixed;left:50%;bottom:calc(104px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--gold);color:var(--ink);font-weight:700;
   padding:10px 16px;border-radius:8px;max-width:calc(100vw - 32px);box-shadow:0 8px 24px #0008;opacity:0;pointer-events:none;transition:opacity .2s;z-index:9;text-align:center}
 #toast.show{opacity:1}
+
+/* Kostüm-Voting */
+.btn.file{display:inline-block;margin:0;font-size:inherit;position:relative;overflow:hidden;text-align:center;cursor:pointer;line-height:22px}
+.btn.file input{position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer}
+.btn.file:focus-within{outline:3px solid #4aa3ff;outline-offset:2px}
+.btn.voted{background:var(--ink);color:var(--gold)}
+.cgrid{display:grid;grid-template-columns:1fr 1fr;gap:18px 12px;margin-top:10px}
+.ccard{min-width:0}
+.ph{display:grid;place-items:center;width:100%;aspect-ratio:3/4;border:0;padding:0;border-radius:8px;overflow:hidden;background:var(--paper2);color:var(--mute);font-size:14px;text-align:center}
+.ph img{width:100%;height:100%;object-fit:cover;display:block}
+.ccard .cn{font-weight:700;margin-top:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ccard small{display:block;color:var(--mute);font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ccard .btn{width:100%;margin-top:8px}
+.own{display:grid;grid-template-columns:112px 1fr;gap:14px;align-items:start}
+.own .row{margin-top:10px}
+.board .nm.wt{display:flex;gap:10px;align-items:center}
+.board .nm.wt>span{min-width:0;overflow:hidden;text-overflow:ellipsis}
+.thumb{width:44px;height:44px;border-radius:6px;object-fit:cover;background:var(--paper2);flex:none;display:block}
+.zoom{position:fixed;inset:0;background:#000d;z-index:20;display:grid;place-items:center;padding:16px;border:0;width:100%;height:100%}
+.zoom img{max-width:100%;max-height:100%;border-radius:8px}
 
 /* Leinwand-Ansicht fürs Tablet */
 .screen{padding:8px 0 24px}
@@ -2505,6 +2525,7 @@ const arr = v => Array.isArray(v) ? v : (v && typeof v === 'object' ? Object.val
 const list = o => Object.keys(o || {}).map(id => Object.assign({id}, o[id])).sort((a,b) => (a.t||0) - (b.t||0));
 const splitPath = p => String(p || '').split('/').filter(Boolean);
 const LETTERS = 'ABCDEF';
+const MAXV = 3;
 function hash(s){ let h = 2166136261; for (let r = 0; r < 3; r++) for (let i = 0; i < s.length; i++){ h ^= s.charCodeAt(i) + r; h = Math.imul(h, 16777619); } return (h >>> 0).toString(36); }
 function newDraft(kind){ return {kind, text:'', opts:['','','',''], correct:[], multi:false}; }
 
@@ -2514,7 +2535,7 @@ let dbCfg = null;
 let dirty = false;
 const ui = {
   tab:'ww', seg:'quiz', view:'app', admin: SS.get('kq_admin') === '1',
-  pick:null, sel:[], reveal:null, skip:{}, cur:{ww:null, quiz:null}, dup:null, err:'', open:{},
+  pick:null, sel:[], reveal:null, skip:{}, cur:{ww:null, quiz:null}, dup:null, err:'', open:{}, up:false, zoom:null,
   draft:newDraft('ww'), j:{name:'', char:''}, a:{pin:'', cand:''}, s:{db:''}
 };
 
@@ -2573,6 +2594,23 @@ const Store = {
   resync(){
     fetch(this.base + '.json').then(r => r.json()).then(d => { D = d || {}; changed(true); }).catch(() => {});
   },
+  photoBase(){ return this.base.slice(0, this.base.length - ROOT.length) + ROOT + 'Photos'; },
+  putPhoto(pid, data){
+    if (this.local){ try { localStorage.setItem('kq_ph_' + pid, data); return Promise.resolve(); } catch(e){ return Promise.reject(new Error('net')); } }
+    return fetch(this.photoBase() + '/' + pid + '.json', {method:'PUT', body:JSON.stringify(data)}).then(r => { if (!r.ok) throw new Error('net'); });
+  },
+  getPhoto(pid){
+    if (this.local) return Promise.resolve(LS.get('kq_ph_' + pid));
+    return fetch(this.photoBase() + '/' + pid + '.json').then(r => { if (!r.ok) throw new Error('net'); return r.json(); });
+  },
+  delPhoto(pid){
+    if (this.local){ LS.del('kq_ph_' + pid); return; }
+    fetch(this.photoBase() + '/' + pid + '.json', {method:'DELETE'}).catch(() => {});
+  },
+  delAllPhotos(){
+    if (this.local){ try { Object.keys(localStorage).filter(k => k.indexOf('kq_ph_') === 0).forEach(k => localStorage.removeItem(k)); } catch(e){} return; }
+    fetch(this.photoBase() + '.json', {method:'DELETE'}).catch(() => {});
+  },
   write(path, val, merge){
     const parts = splitPath(path);
     applyChange(parts, val, merge);
@@ -2585,6 +2623,78 @@ const Store = {
 };
 function editing(){ const a = document.activeElement; return !!a && (a.tagName === 'INPUT' || a.tagName === 'TEXTAREA'); }
 function changed(force){ if (!force && editing()){ dirty = true; return; } render(); }
+
+/* ---------- Kostümfotos ---------- */
+const IDB = {
+  db:null,
+  open(){
+    return this.db || (this.db = new Promise((res, rej) => {
+      try { const r = indexedDB.open('kq_photos', 1); r.onupgradeneeded = () => r.result.createObjectStore('p'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }
+      catch(e){ rej(e); }
+    }));
+  },
+  key(pid){ return dbCfg + '|' + pid; },
+  get(pid){ return this.open().then(db => new Promise(res => { const r = db.transaction('p').objectStore('p').get(this.key(pid)); r.onsuccess = () => res(r.result); r.onerror = () => res(null); })).catch(() => null); },
+  set(pid, v){ this.open().then(db => db.transaction('p', 'readwrite').objectStore('p').put(v, this.key(pid))).catch(() => {}); },
+  del(pid){ this.open().then(db => db.transaction('p', 'readwrite').objectStore('p').delete(this.key(pid))).catch(() => {}); }
+};
+const photos = {};
+function toUrl(d){
+  if (typeof d !== 'string' || !/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(d)) return '';
+  try {
+    if (!URL.createObjectURL) return d;
+    const bin = atob(d.slice(d.indexOf(',') + 1)), u8 = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
+    return URL.createObjectURL(new Blob([u8], {type:d.slice(5, d.indexOf(';'))}));
+  } catch(e){ return d; }
+}
+function setPhoto(pid, t, d){
+  const old = photos[pid];
+  if (old && old.url && old.url.indexOf('blob:') === 0){ try { URL.revokeObjectURL(old.url); } catch(e){} }
+  const url = toUrl(d);
+  photos[pid] = {t, url, state:url ? 'ok' : 'err'};
+}
+function loadPhoto(pid, t){
+  photos[pid] = {t, url:'', state:'load'};
+  IDB.get(pid).then(rec => (rec && rec.t === t) ? rec.data : Store.getPhoto(pid).then(d => { if (d) IDB.set(pid, {t, data:d}); return d; }))
+    .then(d => { if (photos[pid] && photos[pid].t === t){ setPhoto(pid, t, d); changed(); } })
+    .catch(() => { if (photos[pid] && photos[pid].t === t){ photos[pid].state = 'err'; changed(); } });
+}
+function photoSrc(pid){
+  const meta = D.costumes && D.costumes[pid];
+  if (!meta) return '';
+  const p = photos[pid];
+  if (p && p.t === meta.t) return p.url || '';
+  loadPhoto(pid, meta.t);
+  return '';
+}
+function dropPhoto(pid){ Store.delPhoto(pid); IDB.del(pid); delete photos[pid]; }
+function shrink(file){
+  return new Promise((res, rej) => {
+    const url = URL.createObjectURL(file), img = new Image();
+    img.onload = () => {
+      try {
+        const s = Math.min(1, 900 / Math.max(img.width, img.height)), cv = document.createElement('canvas');
+        cv.width = Math.max(1, Math.round(img.width * s)); cv.height = Math.max(1, Math.round(img.height * s));
+        cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height);
+        let q = 0.75, d = cv.toDataURL('image/jpeg', q);
+        while (d.length > 260000 && q > 0.4){ q -= 0.1; d = cv.toDataURL('image/jpeg', q); }
+        URL.revokeObjectURL(url); res(d);
+      } catch(e){ rej(new Error('img')); }
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); rej(new Error('img')); };
+    img.src = url;
+  });
+}
+const costumes = () => list(D.costumes).filter(c => D.players && D.players[c.id]);
+function cVotes(pid){ let n = 0; const V = D.costVotes || {}; for (const v in V) if (V[v] && V[v][pid]) n++; return n; }
+const myCVotes = () => Object.keys((D.costVotes && D.costVotes[me]) || {}).filter(id => D.costumes && D.costumes[id]);
+const stim = n => n === 1 ? '1 Stimme' : n + ' Stimmen';
+function costumeRemoval(pid){
+  const up = {['costumes/' + pid]: null}, V = D.costVotes || {};
+  for (const v in V) if (V[v] && V[v][pid]) up['costVotes/' + v + '/' + pid] = null;
+  return up;
+}
 
 /* ---------- Auswertung ---------- */
 function candidates(){
@@ -2654,7 +2764,7 @@ function vLoading(){
 function vJoin(){
   const dup = ui.dup && D.players && D.players[ui.dup];
   return `${marquee()}<section class="ticket"><h2>Dein Ticket für heute Abend</h2>
-  <p>Zwei Spiele laufen den ganzen Abend: „Wer würde am ehesten …?“ und ein Quiz. Spiel mit, wann du Lust hast, und reich eigene Fragen ein.</p>
+  <p>Den ganzen Abend laufen „Wer würde am ehesten …?“, ein Quiz und das Kostüm-Voting. Spiel mit, wann du Lust hast, und reich eigene Fragen ein.</p>
   <label>Dein Name<input type="text" data-m="j.name" data-enter="join" maxlength="24" autocomplete="given-name" value="${esc(ui.j.name)}"></label>
   <label>Als wer bist du heute hier? <span class="opt">(freiwillig)</span><input type="text" data-m="j.char" data-enter="join" maxlength="30" placeholder="z. B. Hermine Granger" value="${esc(ui.j.char)}"></label>
   ${ui.err ? `<p class="err">${esc(ui.err)}</p>` : ''}
@@ -2666,11 +2776,13 @@ function tabBtn(id, icon, label, n){
 }
 function vMain(){
   const p = D.players[me];
-  const body = ui.tab === 'ww' ? vWW() : ui.tab === 'quiz' ? vQuiz() : ui.tab === 'submit' ? vSubmit() : ui.tab === 'res' ? vRes() : vAdmin();
+  const body = ui.tab === 'ww' ? vWW() : ui.tab === 'quiz' ? vQuiz() : ui.tab === 'cost' ? vCost() : ui.tab === 'submit' ? vSubmit() : ui.tab === 'res' ? vRes() : vAdmin();
+  const zsrc = ui.zoom ? photoSrc(ui.zoom) : '';
   return `${marquee()}
   <div class="bar"><span class="me">${esc(p.name)}${p.char ? ` <i>als ${esc(p.char)}</i>` : ''}</span><span class="conn ${Store.online ? '' : 'off'}">${Store.online ? (Store.local ? 'Testmodus' : 'live') : 'offline'}</span><button class="link" data-act="tab" data-tab="admin">Regie</button></div>
   <main>${body}</main>
-  <nav class="tabs">${tabBtn('ww','🎭','Wer würde …?', wwOpen().length)}${tabBtn('quiz','🎬','Quiz', quizOpen().length)}${tabBtn('submit','✍️','Frage einreichen')}${tabBtn('res','🏆','Ergebnisse')}</nav>`;
+  <nav class="tabs">${tabBtn('ww','🎭','Wer würde …?', wwOpen().length)}${tabBtn('quiz','🎬','Quiz', quizOpen().length)}${tabBtn('cost','📸','Kostüme')}${tabBtn('submit','✍️','Frage einreichen')}${tabBtn('res','🏆','Ergebnisse')}</nav>
+  ${zsrc ? `<button class="zoom" data-act="zoom-close" aria-label="Foto schließen"><img src="${zsrc}" alt=""></button>` : ''}`;
 }
 const byline = q => `<p class="by">${q.off ? 'Von der Regie' : 'Eingereicht von ' + esc(q.byName || 'einem Gast')}</p>`;
 function emptyCard(title, text){
@@ -2725,6 +2837,25 @@ function vQuiz(){
   <div class="opts">${arr(q.opts).map((o,i) => `<button class="optb ${q.multi ? 'multi' : ''} ${ui.sel.includes(i) ? 'on' : ''}" aria-pressed="${ui.sel.includes(i)}" data-act="opt" data-i="${i}" data-multi="${q.multi ? 1 : ''}"><span class="mk">${LETTERS[i]}</span><span>${esc(o)}</span></button>`).join('')}</div>
   <div class="row"><button class="btn" data-act="answer" data-id="${q.id}" ${ui.sel.length ? '' : 'disabled'}>Antwort abgeben</button>${open.length > 1 ? `<button class="btn ghost" data-act="skip" data-id="${q.id}">Später</button>` : ''}</div></section>`;
 }
+function phBox(pid){
+  const src = photoSrc(pid), st = photos[pid] && photos[pid].state, nm = (D.players[pid] && D.players[pid].name) || '';
+  if (src) return `<button class="ph" data-act="zoom" data-id="${pid}" aria-label="Foto von ${esc(nm)} vergrößern"><img src="${src}" alt="Kostüm von ${esc(nm)}"></button>`;
+  if (st === 'err') return `<button class="ph" data-act="photo-retry" data-id="${pid}">Foto nicht geladen.<br>Tippen zum Wiederholen</button>`;
+  return `<div class="ph">Foto lädt …</div>`;
+}
+function vCost(){
+  const mine = D.costumes && D.costumes[me], mv = myCVotes(), left = MAXV - mv.length, others = costumes().filter(c => c.id !== me);
+  const file = label => `<label class="btn file">${ui.up ? 'Foto wird hochgeladen …' : label}<input type="file" accept="image/*" data-file="costume" ${ui.up ? 'disabled' : ''}></label>`;
+  let h = `<section class="ticket has-stub"><div class="stub"><span>Kostüm-Voting</span><b>${left <= 0 ? 'alle 3 Stimmen vergeben' : 'noch ' + left + ' von 3 Stimmen'}</b></div>`;
+  if (mine) h += `<div class="own">${phBox(me)}<div><h2>Dein Kostüm</h2><p>${stim(cVotes(me))} bisher.</p><div class="row">${file('Foto ersetzen')}<button class="btn ghost" data-act="cdel">Foto löschen</button></div></div></div>`;
+  else h += `<h2>Zeig dein Kostüm</h2><p>Lade ein Foto von dir hoch. Alle, die mitspielen, sehen es und können dafür stimmen.</p><div class="row">${file('Foto aufnehmen oder auswählen')}</div>`;
+  if (ui.err) h += `<p class="err" style="margin-top:10px">${esc(ui.err)}</p>`;
+  h += `</section><section class="ticket"><h2>Alle Kostüme</h2><p class="note">Du hast drei Stimmen und kannst sie jederzeit umverteilen. Für dich selbst stimmen geht nicht. Die Rangliste steht unter Ergebnisse.</p>`;
+  h += others.length ? `<div class="cgrid">${others.map(c => { const p = D.players[c.id], voted = mv.includes(c.id);
+    return `<div class="ccard">${phBox(c.id)}<div class="cn">${esc(p.name)}</div>${p.char ? `<small>als ${esc(p.char)}</small>` : ''}<small>${stim(cVotes(c.id))}</small><button class="btn small ${voted ? 'voted' : ''}" aria-pressed="${voted}" data-act="cvote" data-id="${c.id}" ${!voted && left <= 0 ? 'disabled' : ''}>${voted ? '✓ Stimme zurücknehmen' : left > 0 ? 'Stimme geben' : 'Keine Stimme frei'}</button></div>`; }).join('')}</div>`
+    : `<p>${mine ? 'Noch hat niemand sonst ein Foto hochgeladen.' : 'Noch gibt es keine Fotos. Mach den Anfang.'}</p>`;
+  return h + `</section>`;
+}
 function formHtml(official){
   const d = ui.draft;
   let h = `<div class="seg"><button class="${d.kind === 'ww' ? 'on' : ''}" data-act="kind" data-k="ww">Wer würde am ehesten …?</button><button class="${d.kind === 'quiz' ? 'on' : ''}" data-act="kind" data-k="quiz">Quizfrage</button></div>`;
@@ -2756,12 +2887,19 @@ function det(key, summary, inner){
   return `<details data-d="${key}" ${ui.open[key] ? 'open' : ''}><summary>${summary}</summary>${inner}</details>`;
 }
 function vRes(){
-  let h = `<section class="ticket"><h2>Ergebnisse</h2><div class="seg"><button class="${ui.seg === 'quiz' ? 'on' : ''}" data-act="seg" data-s="quiz">Quiz-Rangliste</button><button class="${ui.seg === 'ww' ? 'on' : ''}" data-act="seg" data-s="ww">Wer würde …?</button></div>`;
+  let h = `<section class="ticket"><h2>Ergebnisse</h2><div class="seg"><button class="${ui.seg === 'quiz' ? 'on' : ''}" data-act="seg" data-s="quiz">Quiz</button><button class="${ui.seg === 'ww' ? 'on' : ''}" data-act="seg" data-s="ww">Wer würde …?</button><button class="${ui.seg === 'cost' ? 'on' : ''}" data-act="seg" data-s="cost">Kostüme</button></div>`;
   if (ui.seg === 'quiz'){
     h += `<p class="note">Ein Punkt pro richtig beantworteter Frage. Der Stand läuft den ganzen Abend mit.</p>${boardHtml(0)}`;
     const mine = list(D.quiz).filter(q => D.quizAns && D.quizAns[q.id] && D.quizAns[q.id][me]);
     if (mine.length) h += `<h3>Deine Antworten</h3>` + mine.map(q => { const a = D.quizAns[q.id][me];
       return det('q' + q.id, `${a.ok ? '✓' : '✗'} ${esc(q.text)}`, quizResultOpts(q, arr(a.s).map(Number), quizStat(q.id))); }).join('');
+  } else if (ui.seg === 'cost'){
+    const rows = costumes().map(c => ({id:c.id, n:cVotes(c.id), p:D.players[c.id]})).sort((a,b) => b.n - a.n || a.p.name.localeCompare(b.p.name, 'de'));
+    rows.forEach((r,i) => { r.rank = (i && rows[i-1].n === r.n) ? rows[i-1].rank : i + 1; });
+    h += `<p class="note">Jeder Gast vergibt bis zu drei Stimmen. Der Stand läuft den ganzen Abend mit.</p>`;
+    h += rows.length ? `<ol class="board">${rows.map(r => { const src = photoSrc(r.id);
+      return `<li class="${r.id === me ? 'me' : ''}"><span class="rk">${r.rank}</span><span class="nm wt">${src ? `<img class="thumb" src="${src}" alt="">` : '<span class="thumb"></span>'}<span>${esc(r.p.name)}${r.p.char ? `<small>als ${esc(r.p.char)}</small>` : ''}</span></span><span class="pt">${stim(r.n)}</span></li>`; }).join('')}</ol>`
+      : `<p>Noch hat niemand ein Kostümfoto hochgeladen.</p><div class="row"><button class="btn" data-act="tab" data-tab="cost">Zum Kostüm-Voting</button></div>`;
   } else {
     const all = list(D.ww), voted = all.filter(q => D.wwVotes && D.wwVotes[q.id] && D.wwVotes[q.id][me]);
     const titles = [];
@@ -2817,9 +2955,11 @@ function vAdmin(){
     <div class="inline"><input type="text" data-m="a.cand" data-enter="add-cand" maxlength="24" placeholder="Weiterer Name" aria-label="Weiterer Name" value="${esc(ui.a.cand)}"><button class="btn small" data-act="add-cand">Hinzufügen</button></div></section>
   <section class="ticket"><h2>Gäste (${players.length})</h2>
     <ul class="plain">${players.map(p => `<li><span>${esc(p.name)}${p.char ? `<small>als ${esc(p.char)}</small>` : ''}</span>${p.id === me ? '<small>du</small>' : `<button class="btn ghost small" data-act="del-player" data-id="${p.id}">Entfernen</button>`}</li>`).join('')}</ul></section>
+  <section class="ticket"><h2>Kostümfotos (${costumes().length})</h2>
+    ${costumes().length ? `<ul class="plain">${costumes().map(c => `<li><span>${esc(D.players[c.id].name)}<small>${stim(cVotes(c.id))}</small></span><button class="btn ghost small" data-act="cdel-admin" data-id="${c.id}">Foto löschen</button></li>`).join('')}</ul>` : '<p class="note">Noch keine Fotos.</p>'}</section>
   <section class="ticket"><h2>Zurücksetzen</h2>
     <p class="note">Praktisch nach einem Probelauf vor der Party.</p>
-    <div class="row"><button class="btn ghost" data-act="reset-answers">Nur Stimmen und Antworten löschen</button><button class="btn ghost" data-act="reset-all">Alles löschen, auch Fragen und Gäste</button></div>
+    <div class="row"><button class="btn ghost" data-act="reset-answers">Nur Stimmen und Antworten löschen</button><button class="btn ghost" data-act="reset-all">Alles löschen, auch Fragen, Fotos und Gäste</button></div>
     <div class="tear"></div>
     <div class="row"><button class="btn ghost" data-act="change-db">Verbindung ändern</button><button class="btn ghost" data-act="admin-exit">Regie schließen</button></div></section>`;
 }
@@ -2867,7 +3007,23 @@ function act(a, ds){
       Store.write('players/' + me, {name, char:ui.j.char.trim(), t:Date.now()}); return;
     }
     case 'adopt': if (ui.dup && D.players && D.players[ui.dup]){ me = ui.dup; LS.set('kq_pid', me); ui.dup = null; } break;
-    case 'tab': ui.tab = ds.tab; ui.reveal = null; window.scrollTo(0, 0); break;
+    case 'tab': ui.tab = ds.tab; ui.reveal = null; ui.zoom = null; window.scrollTo(0, 0); break;
+    case 'zoom': ui.zoom = ds.id; break;
+    case 'zoom-close': ui.zoom = null; break;
+    case 'photo-retry': delete photos[ds.id]; break;
+    case 'cvote': {
+      const id = ds.id, mv = myCVotes();
+      if (id === me || !D.costumes || !D.costumes[id]) break;
+      if (mv.includes(id)){ Store.write('costVotes/' + me + '/' + id, null); return; }
+      if (mv.length >= MAXV){ toast('Du hast schon alle drei Stimmen vergeben.'); break; }
+      Store.write('costVotes/' + me + '/' + id, true); return;
+    }
+    case 'cdel':
+      if (!confirm('Dein Kostümfoto löschen? Die Stimmen dafür gehen verloren.')) return;
+      { const up = costumeRemoval(me); dropPhoto(me); Store.write('', up, true); } return;
+    case 'cdel-admin':
+      if (!confirm('Dieses Kostümfoto mit allen Stimmen löschen?')) return;
+      { const up = costumeRemoval(ds.id); dropPhoto(ds.id); Store.write('', up, true); } return;
     case 'seg': ui.seg = ds.s; break;
     case 'pick': ui.pick = norm(ui.pick) === norm(ds.n) ? null : ds.n; break;
     case 'vote':
@@ -2947,7 +3103,9 @@ function act(a, ds){
     case 'auto': Store.write('meta/auto', !!ds.v); return;
     case 'del-player':
       if (!confirm('Diesen Gast entfernen? Er oder sie kann sich danach neu einwählen.')) return;
-      Store.write('players/' + ds.id, null); return;
+      { const up = costumeRemoval(ds.id); up['players/' + ds.id] = null; up['costVotes/' + ds.id] = null;
+        if (D.costumes && D.costumes[ds.id]) dropPhoto(ds.id);
+        Store.write('', up, true); } return;
     case 'seed': {
       const up = {'meta/seeded': true}, now = Date.now(), name = myName();
       SEED_WW.forEach((t,i) => { up['ww/' + uid('w')] = {text:t, by:me, byName:name, off:true, t:now + i}; });
@@ -2956,11 +3114,12 @@ function act(a, ds){
       Store.write('', up, true); return;
     }
     case 'reset-answers':
-      if (!confirm('Alle Stimmen und Quizantworten löschen? Fragen und Gäste bleiben.')) return;
-      Store.write('', {wwVotes:null, quizAns:null}, true); return;
+      if (!confirm('Alle Stimmen und Quizantworten löschen? Fragen, Gäste und Kostümfotos bleiben.')) return;
+      Store.write('', {wwVotes:null, quizAns:null, costVotes:null}, true); return;
     case 'reset-all':
-      if (!confirm('Wirklich alles löschen? Fragen, Gäste, Stimmen und Antworten sind dann weg. Nur die Regie-PIN bleibt.')) return;
-      Store.write('', {wwVotes:null, quizAns:null, ww:null, quiz:null, players:null, cands:null, 'meta/seeded':null}, true); return;
+      if (!confirm('Wirklich alles löschen? Fragen, Gäste, Kostümfotos, Stimmen und Antworten sind dann weg. Nur die Regie-PIN bleibt.')) return;
+      Store.delAllPhotos(); Object.keys(photos).forEach(k => { IDB.del(k); delete photos[k]; });
+      Store.write('', {wwVotes:null, quizAns:null, ww:null, quiz:null, players:null, cands:null, costumes:null, costVotes:null, 'meta/seeded':null}, true); return;
     case 'screen': ui.view = 'screen'; window.scrollTo(0, 0); break;
     case 'screen-exit': ui.view = 'app'; break;
   }
@@ -2972,6 +3131,22 @@ document.addEventListener('input', e => {
   const ps = m.split('.'); let o = ui;
   for (let i = 0; i < ps.length - 1; i++) o = o[ps[i]];
   o[ps[ps.length - 1]] = e.target.value;
+});
+document.addEventListener('change', e => {
+  const t = e.target;
+  if (!t.dataset || t.dataset.file !== 'costume' || !t.files || !t.files[0] || ui.up) return;
+  const f = t.files[0];
+  ui.err = ''; ui.up = true; render();
+  shrink(f).then(d => Store.putPhoto(me, d).then(() => d)).then(d => {
+    const ts = Date.now();
+    setPhoto(me, ts, d); IDB.set(me, {t:ts, data:d});
+    ui.up = false; toast('Foto hochgeladen.');
+    Store.write('costumes/' + me, {t:ts});
+  }).catch(err => {
+    ui.up = false;
+    ui.err = err && err.message === 'img' ? 'Dieses Bild lässt sich nicht lesen. Nimm ein Foto mit der Kamera auf oder wähle ein JPG.' : 'Das Foto wurde nicht hochgeladen, die Verbindung fehlt. Versuch es noch einmal.';
+    render();
+  });
 });
 document.addEventListener('keydown', e => {
   if (e.key === 'Enter' && e.target.dataset && e.target.dataset.enter){ e.preventDefault(); act(e.target.dataset.enter, e.target.dataset); }
