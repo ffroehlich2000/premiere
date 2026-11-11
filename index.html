@@ -146,6 +146,38 @@ summary small{display:block;font-weight:400;color:var(--mute);font-size:14px;mar
   padding:10px 16px;border-radius:8px;max-width:calc(100vw - 32px);box-shadow:0 8px 24px #0008;opacity:0;pointer-events:none;transition:opacity .2s;z-index:9;text-align:center}
 #toast.show{opacity:1}
 
+.seg4{flex-wrap:wrap}
+.seg4 button{flex:1 0 50%}
+.seg4 button:nth-child(3){border-left:0}
+.seg4 button:nth-child(n+3){border-top:2px solid var(--ink)}
+.roles{list-style:none;padding:0;margin:8px 0}
+.roles li{padding:8px;border-bottom:1px solid #cdbb91}
+.roles li:last-child{border-bottom:0}
+.roles li b{display:block}
+.roles li span{font-size:14px;color:var(--mute)}
+.roles li.cur{background:#ffe9a8;border-radius:8px;border-bottom-color:transparent}
+.roles li.cur b::after{content:" (deine Rolle)";font-weight:400;font-size:13px;color:var(--mute)}
+.ask{position:fixed;inset:0;background:#000c;z-index:30;display:grid;place-items:center;padding:20px}
+.ask .ticket{max-width:420px;width:100%;margin:0}
+/* Abspann */
+.absbtn{display:block;width:100%;border:0;border-radius:10px;background:var(--night);color:var(--paper);padding:10px 14px 13px;margin:2px 0 14px;text-align:center;box-shadow:0 6px 16px -8px #000a}
+.absbtn .lights{display:block;margin-bottom:9px}
+.absbtn b{display:block;font:400 26px/1.1 var(--disp);color:var(--gold)}
+.absbtn small{display:block;font-size:14px;color:#e9d9c4;margin-top:4px}
+.absbtn.on{box-shadow:0 0 0 3px var(--velvet)}
+.credits{background:var(--night);color:var(--paper);border-radius:10px;padding:14px 16px 16px;text-align:center;margin:4px 0 12px}
+.credits .lights{margin:0 0 12px}
+.credits .lights:last-child{margin:14px 0 0}
+.credits p{margin:0}
+.credits .cap{font-size:13px;color:#cbb9c4}
+.credits .cph{width:120px;height:160px;object-fit:cover;border-radius:8px;margin:12px auto 0;display:block}
+.credits .cname{font:400 clamp(28px,9vw,38px)/1.1 var(--disp);color:var(--gold);margin-top:12px;overflow-wrap:anywhere}
+.credits .cchar{font-size:15px;margin:2px 0 14px}
+.credits .crole{font:700 20px/1.2 var(--body);margin:2px 0 4px}
+.credits dl{margin:14px 0 0;text-align:left;border-top:1px solid #4a3850}
+.credits dt{font-size:13px;color:#cbb9c4;margin-top:10px}
+.credits dd{margin:0;font-weight:700;overflow-wrap:anywhere}
+.credits dd span{display:block}
 /* Kostüm-Voting */
 .btn.file{display:inline-block;margin:0;font-size:inherit;position:relative;overflow:hidden;text-align:center;cursor:pointer;line-height:22px}
 .btn.file input{position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer}
@@ -2507,6 +2539,57 @@ const SEED_QUIZ = [
   {text:'In welcher Stadt steht die Banknotendruckerei, die in „Haus des Geldes“ überfallen wird?', opts:['Barcelona','Madrid','Lissabon','Sevilla'], correct:[1], multi:false}
 ];
 
+const SEED_QUIZ2 = [
+  {text:'In welchem Film ruft die Hauptfigur am Bug eines Schiffs „Ich bin der König der Welt!“?', opts:['Fluch der Karibik','Titanic','Master and Commander','Life of Pi'], correct:[1], multi:false},
+  {text:'Wie heißt der Löwe, der in „Der König der Löwen“ am Ende König wird?', opts:['Mufasa','Scar','Simba','Timon'], correct:[2], multi:false},
+  {text:'Welche Serie spielt in der fiktiven Kleinstadt Hawkins?', opts:['Riverdale','Dark','Stranger Things','Twin Peaks'], correct:[2], multi:false},
+  {text:'Auf welchem Kontinent spielt „Game of Thrones“ größtenteils?', opts:['Mittelerde','Westeros','Narnia','Panem'], correct:[1], multi:false},
+  {text:'Wer führte bei „Titanic“ von 1997 Regie?', opts:['Steven Spielberg','James Cameron','Christopher Nolan','Ridley Scott'], correct:[1], multi:false},
+  {text:'Wer spielt Captain Jack Sparrow in „Fluch der Karibik“?', opts:['Orlando Bloom','Johnny Depp','Brad Pitt','Keanu Reeves'], correct:[1], multi:false},
+  {text:'Wie viele Infinity-Steine gibt es in den Marvel-Filmen?', opts:['Vier','Fünf','Sechs','Sieben'], correct:[2], multi:false},
+  {text:'Welche dieser Figuren aus „Der Herr der Ringe“ sind Hobbits?', opts:['Frodo','Gimli','Sam','Legolas'], correct:[0,2], multi:true},
+  {text:'Welche dieser Häuser gibt es in Hogwarts?', opts:['Gryffindor','Stark','Ravenclaw','Lannister'], correct:[0,2], multi:true},
+  {text:'Wie heißt der Chemielehrer, der in „Breaking Bad“ zum Drogenkoch wird?', opts:['Jesse Pinkman','Saul Goodman','Walter White','Hank Schrader'], correct:[2], multi:false},
+  {text:'In welcher Stadt spielt „Sex and the City“?', opts:['New York','Los Angeles','Chicago','London'], correct:[0], multi:false},
+  {text:'Was für ein Fisch ist Nemo in „Findet Nemo“?', opts:['Clownfisch','Goldfisch','Kugelfisch','Seepferdchen'], correct:[0], multi:false},
+  {text:'Wie heißt das Raumschiff von Han Solo in „Star Wars“?', opts:['Enterprise','Millennium Falke','Serenity','Nostromo'], correct:[1], multi:false},
+  {text:'Welche dieser Filme gehören zur „Herr der Ringe“-Trilogie?', opts:['Die Gefährten','Smaugs Einöde','Die zwei Türme','Der Halbblutprinz'], correct:[0,2], multi:true},
+  {text:'Wie heißt die Hauptfigur in „Die Tribute von Panem“?', opts:['Bella Swan','Hermine Granger','Katniss Everdeen','Tris Prior'], correct:[2], multi:false},
+  {text:'Welche Farbe hat das Lichtschwert von Darth Vader?', opts:['Blau','Grün','Rot','Violett'], correct:[2], multi:false},
+  {text:'Welcher Film gewann 2020 als erster nicht englischsprachiger Film den Oscar als bester Film?', opts:['Roma','Parasite','Das Leben ist schön','Tiger and Dragon'], correct:[1], multi:false},
+  {text:'Welche dieser Serien sind Netflix-Produktionen?', opts:['Stranger Things','Game of Thrones','Bridgerton','Breaking Bad'], correct:[0,2], multi:true},
+  {text:'Wie heißt das Café, in dem sich die Clique aus „Friends“ trifft?', opts:['Central Perk','MacLaren’s','Café Nervosa','Luke’s Diner'], correct:[0], multi:false},
+  {text:'Welcher Zauberspruch entwaffnet in „Harry Potter“ den Gegner?', opts:['Lumos','Alohomora','Expelliarmus','Wingardium Leviosa'], correct:[2], multi:false}
+];
+const SEED_BDAY = [
+  'die Hauptrolle in einer romantischen Komödie spielen?',
+  'als Superheldin heimlich die Welt retten?',
+  'als Bösewicht in einem Agentenfilm überzeugen?',
+  'in einem Musical spontan lossingen?',
+  'ihren Text vergessen und einfach improvisieren?',
+  'auf dem roten Teppich stolpern und es mit Stil überspielen?',
+  'eine eigene Reality-Show bekommen?',
+  'bei ihrer Oscar-Rede vor Rührung weinen?',
+  'einen Serienmarathon bis zum Sonnenaufgang durchziehen?',
+  'in einem Horrorfilm bis zum Abspann überleben?'
+];
+const ROLE_INFO = [
+  ['Hauptdarstellerin', 'für Melanie, Alisa und Annika, zusätzlich zu ihrer Rolle aus dem Spiel'],
+  ['Quiz-Champion', 'für den ersten Platz im Quiz'],
+  ['Kostüm-Star', 'für das Kostüm mit den meisten Stimmen'],
+  ['Mastermind', 'für alle, die im Quiz keinen Fehler machen'],
+  ['Oscar-nominiert', 'für alle, die im Quiz knapp hinter der Spitze liegen'],
+  ['Stilikone', 'für Kostüme, die knapp hinter dem ersten Platz liegen'],
+  ['Publikumsliebling', 'für alle, die bei „Wer würde am ehesten …?“ oft genannt werden'],
+  ['Drehbuchautor:in', 'für alle, die fleißig Fragen einreichen'],
+  ['Castingchef:in', 'für ein gutes Gespür, wen die anderen wählen'],
+  ['Jurymitglied', 'für alle, die beim Kostüm-Voting mitstimmen'],
+  ['Dauergast im Kinosaal', 'für alle, die viel mitspielen'],
+  ['Geheimtipp', 'für Kostüme, die noch entdeckt werden wollen'],
+  ['Premierengast', 'für alle, die dabei sind']
+];
+const isFinale = () => !!(D.meta && D.meta.finale);
+const wwLabel = q => q.bday ? 'Geburtstagsrunde: Wer von den dreien würde am ehesten …' : 'Wer würde am ehesten …';
 const $ = s => document.querySelector(s);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const LS = {
@@ -2535,8 +2618,8 @@ let dbCfg = null;
 let dirty = false;
 const ui = {
   tab:'ww', seg:'quiz', view:'app', admin: SS.get('kq_admin') === '1',
-  pick:null, sel:[], reveal:null, skip:{}, cur:{ww:null, quiz:null}, dup:null, err:'', open:{}, up:false, zoom:null,
-  draft:newDraft('ww'), j:{name:'', char:''}, a:{pin:'', cand:''}, s:{db:''}
+  pick:null, sel:[], reveal:null, skip:{}, cur:{ww:null, quiz:null}, dup:null, err:'', open:{}, up:false, zoom:null, ask:null,
+  draft:newDraft('ww'), j:{name:'', char:''}, a:{pin:'', cand:'', pin2:''}, s:{db:''}
 };
 
 /* ---------- Datenhaltung ---------- */
@@ -2762,6 +2845,12 @@ function vLoading(){
   <div class="row"><button class="btn" data-act="reload">Noch einmal versuchen</button><button class="btn ghost" data-act="change-db">Andere Adresse eingeben</button></div></section>`;
 }
 function vJoin(){
+  if (isFinale()) return `${marquee()}<section class="ticket has-stub"><div class="stub"><span>Abspann</span><b>Die Vorstellung ist vorbei</b></div>
+  <h2>Das war ganz großes Kino</h2>
+  <p>Warst du dabei? Gib den Namen ein, mit dem du gespielt hast, dann siehst du deinen persönlichen Abspann.</p>
+  <label>Dein Name vom Abend<input type="text" data-m="j.name" data-enter="join" maxlength="24" value="${esc(ui.j.name)}"></label>
+  ${ui.err ? `<p class="err">${esc(ui.err)}</p>` : ''}
+  <div class="row"><button class="btn" data-act="join">Abspann ansehen</button></div></section>`;
   const dup = ui.dup && D.players && D.players[ui.dup];
   return `${marquee()}<section class="ticket"><h2>Dein Ticket für heute Abend</h2>
   <p>Den ganzen Abend laufen „Wer würde am ehesten …?“, ein Quiz und das Kostüm-Voting. Spiel mit, wann du Lust hast, und reich eigene Fragen ein.</p>
@@ -2771,17 +2860,39 @@ function vJoin(){
   ${dup ? `<p class="err">„${esc(dup.name)}“ spielt schon mit. Häng etwas an deinen Namen an – oder bist das du auf einem anderen Gerät?</p>` : ''}
   <div class="row"><button class="btn" data-act="join">Ticket lösen</button>${dup ? `<button class="btn ghost" data-act="adopt">Das bin ich, hier weiterspielen</button>` : ''}</div></section>`;
 }
-function tabBtn(id, icon, label, n){
-  return `<button class="${ui.tab === id ? 'on' : ''}" data-act="tab" data-tab="${id}"><span aria-hidden="true">${icon}</span>${label}${n ? `<em aria-label="${n} offen">${n}</em>` : ''}</button>`;
+let cvKnown = null, cvFor = null;
+function costumeNews(){
+  if (!Store.loaded || !me || !D.players || !D.players[me]) return 0;
+  const n = (D.costumes && D.costumes[me]) ? cVotes(me) : 0, key = 'kq_cvseen_' + me;
+  let seen = +(LS.get(key) || 0);
+  if (cvFor !== me){ cvFor = me; cvKnown = null; }
+  if (cvKnown === null){ if (n > seen) toast(n - seen === 1 ? 'Seit deinem letzten Besuch: 1 neue Stimme für dein Kostüm.' : 'Seit deinem letzten Besuch: ' + (n - seen) + ' neue Stimmen für dein Kostüm.'); }
+  else if (n > cvKnown) toast('Neue Stimme für dein Kostüm – jetzt ' + stim(n) + '.');
+  cvKnown = n;
+  if (ui.tab === 'cost' || n < seen){ seen = n; LS.set(key, String(n)); }
+  return n - seen;
+}
+function tabBtn(id, icon, label, n, word){
+  return `<button class="${ui.tab === id ? 'on' : ''}" data-act="tab" data-tab="${id}"><span aria-hidden="true">${icon}</span>${label}${n ? `<em aria-label="${n} ${word || 'offen'}">${n}</em>` : ''}</button>`;
+}
+function vFinale(){
+  const p = D.players[me], adm = ui.tab === 'admin';
+  return `${marquee()}
+  <div class="bar"><span class="me">${esc(p.name)}${p.char ? ` <i>als ${esc(p.char)}</i>` : ''}</span><button class="link" data-act="tab" data-tab="${adm ? 'res' : 'admin'}">${adm ? 'Zum Abspann' : 'Regie'}</button></div>
+  <main>${adm ? vAdmin() : `<section class="ticket has-stub"><div class="stub"><span>Abspann</span><b>Die Vorstellung ist vorbei</b></div>
+    <h2>Das war ganz großes Kino</h2>
+    <p>Danke, dass du bei der Premiere von Melanie, Alisa und Annika dabei warst. Hier läuft dein persönlicher Abspann. Fortsetzung folgt.</p>
+    ${abspann(true)}</section>`}</main>`;
 }
 function vMain(){
-  const p = D.players[me];
+  if (isFinale()) return vFinale();
+  const p = D.players[me], news = costumeNews();
   const body = ui.tab === 'ww' ? vWW() : ui.tab === 'quiz' ? vQuiz() : ui.tab === 'cost' ? vCost() : ui.tab === 'submit' ? vSubmit() : ui.tab === 'res' ? vRes() : vAdmin();
   const zsrc = ui.zoom ? photoSrc(ui.zoom) : '';
   return `${marquee()}
   <div class="bar"><span class="me">${esc(p.name)}${p.char ? ` <i>als ${esc(p.char)}</i>` : ''}</span><span class="conn ${Store.online ? '' : 'off'}">${Store.online ? (Store.local ? 'Testmodus' : 'live') : 'offline'}</span><button class="link" data-act="tab" data-tab="admin">Regie</button></div>
   <main>${body}</main>
-  <nav class="tabs">${tabBtn('ww','🎭','Wer würde …?', wwOpen().length)}${tabBtn('quiz','🎬','Quiz', quizOpen().length)}${tabBtn('cost','📸','Kostüme')}${tabBtn('submit','✍️','Frage einreichen')}${tabBtn('res','🏆','Ergebnisse')}</nav>
+  <nav class="tabs">${tabBtn('ww','🎭','Wer würde …?', wwOpen().length)}${tabBtn('quiz','🎬','Quiz', quizOpen().length)}${tabBtn('cost','📸','Kostüme', news, 'neue Stimmen')}${tabBtn('submit','✍️','Frage einreichen')}${tabBtn('res','🏆','Ergebnisse')}</nav>
   ${zsrc ? `<button class="zoom" data-act="zoom-close" aria-label="Foto schließen"><img src="${zsrc}" alt=""></button>` : ''}`;
 }
 const byline = q => `<p class="by">${q.off ? 'Von der Regie' : 'Eingereicht von ' + esc(q.byName || 'einem Gast')}</p>`;
@@ -2795,7 +2906,7 @@ function barsHtml(t){
 function vWW(){
   if (ui.reveal && ui.reveal.kind === 'ww' && D.ww && D.ww[ui.reveal.id]){
     const q = D.ww[ui.reveal.id], t = tally(ui.reveal.id);
-    return `<section class="ticket has-stub"><div class="stub"><span>Wer würde am ehesten …</span><b>Zwischenstand</b></div>
+    return `<section class="ticket has-stub"><div class="stub"><span>${wwLabel(q)}</span><b>Zwischenstand</b></div>
     <h2 class="q">… ${esc(q.text)}</h2>${barsHtml(t)}
     <p class="note">${t.total === 1 ? 'Bisher 1 Stimme' : 'Bisher ' + t.total + ' Stimmen'}. Der Stand ändert sich, solange weiter abgestimmt wird – du findest ihn jederzeit unter Ergebnisse.</p>
     <div class="row"><button class="btn" data-act="next">Weiter</button></div></section>`;
@@ -2803,9 +2914,9 @@ function vWW(){
   const open = wwOpen();
   if (!open.length) return emptyCard('Alles abgestimmt', list(D.ww).length ? 'Du hast bei jeder Frage abgestimmt. Neue Fragen tauchen hier automatisch auf.' : 'Noch gibt es keine Fragen. Mach den Anfang und reich die erste ein.');
   const q = nextOf(open, 'ww');
-  return `<section class="ticket has-stub"><div class="stub"><span>Wer würde am ehesten …</span><b>noch ${open.length} offen</b></div>
+  return `<section class="ticket has-stub"><div class="stub"><span>${wwLabel(q)}</span><b>noch ${open.length} offen</b></div>
   <h2 class="q">… ${esc(q.text)}</h2>${byline(q)}
-  <div class="chips">${candidates().map(n => `<button class="chip ${norm(ui.pick) === norm(n) ? 'on' : ''}" aria-pressed="${norm(ui.pick) === norm(n)}" data-act="pick" data-n="${esc(n)}">${esc(n)}</button>`).join('')}</div>
+  <div class="chips">${(q.bday ? HOSTS : candidates()).map(n => `<button class="chip ${norm(ui.pick) === norm(n) ? 'on' : ''}" aria-pressed="${norm(ui.pick) === norm(n)}" data-act="pick" data-n="${esc(n)}">${esc(n)}</button>`).join('')}</div>
   <div class="row"><button class="btn" data-act="vote" data-id="${q.id}" ${ui.pick ? '' : 'disabled'}>Stimme abgeben</button>${open.length > 1 ? `<button class="btn ghost" data-act="skip" data-id="${q.id}">Später</button>` : ''}</div></section>`;
 }
 function quizResultOpts(q, mySel, st){
@@ -2858,10 +2969,11 @@ function vCost(){
 }
 function formHtml(official){
   const d = ui.draft;
-  let h = `<div class="seg"><button class="${d.kind === 'ww' ? 'on' : ''}" data-act="kind" data-k="ww">Wer würde am ehesten …?</button><button class="${d.kind === 'quiz' ? 'on' : ''}" data-act="kind" data-k="quiz">Quizfrage</button></div>`;
-  if (d.kind === 'ww'){
-    h += `<label>Wer würde am ehesten …<textarea data-m="draft.text" maxlength="140" rows="2" placeholder="… im Kino laut mitsingen?">${esc(d.text)}</textarea></label>
-    <p class="note">Zur Auswahl stehen später automatisch die Namen der Gäste.</p>`;
+  if (!official && d.kind === 'bday') d.kind = 'ww';
+  let h = `<div class="seg"><button class="${d.kind === 'ww' ? 'on' : ''}" data-act="kind" data-k="ww">${official ? 'Wer würde …?' : 'Wer würde am ehesten …?'}</button><button class="${d.kind === 'quiz' ? 'on' : ''}" data-act="kind" data-k="quiz">Quizfrage</button>${official ? `<button class="${d.kind === 'bday' ? 'on' : ''}" data-act="kind" data-k="bday">Geburtstags­runde</button>` : ''}</div>`;
+  if (d.kind === 'ww' || d.kind === 'bday'){
+    h += `<label>${d.kind === 'bday' ? 'Wer von den dreien würde am ehesten …' : 'Wer würde am ehesten …'}<textarea data-m="draft.text" maxlength="140" rows="2" placeholder="… im Kino laut mitsingen?">${esc(d.text)}</textarea></label>
+    <p class="note">${d.kind === 'bday' ? 'Zur Auswahl stehen nur Melanie, Alisa und Annika. Abstimmen dürfen alle.' : 'Zur Auswahl stehen später automatisch die Namen der Gäste.'}</p>`;
   } else {
     h += `<label>Deine Frage<textarea data-m="draft.text" maxlength="200" rows="2" placeholder="Wie heißt …?">${esc(d.text)}</textarea></label>
     <div class="seg"><button class="${!d.multi ? 'on' : ''}" data-act="multi" data-v="">Eine Antwort richtig</button><button class="${d.multi ? 'on' : ''}" data-act="multi" data-v="1">Mehrere richtig</button></div>
@@ -2886,13 +2998,60 @@ function boardHtml(limit){
 function det(key, summary, inner){
   return `<details data-d="${key}" ${ui.open[key] ? 'open' : ''}><summary>${summary}</summary>${inner}</details>`;
 }
+function abspann(fin){
+  const p = D.players[me], b = board(), r = b.find(x => x.pid === me) || {pts:0, n:0, rank:0};
+  const cs = costumes().map(c => ({id:c.id, n:cVotes(c.id)})), mc = cs.find(c => c.id === me);
+  const cRank = mc ? cs.filter(c => c.n > mc.n).length + 1 : 0;
+  const all = list(D.ww), voted = all.filter(q => D.wwVotes && D.wwVotes[q.id] && D.wwVotes[q.id][me]);
+  const titles = voted.filter(q => { const t = tally(q.id); return t.rows.length && t.rows.filter(x => x.c === t.rows[0].c).some(x => norm(x.name) === norm(p.name)); });
+  const sub = all.filter(q => q.by === me && !q.off).length + list(D.quiz).filter(q => q.by === me && !q.off).length;
+  const cast = voted.map(q => tally(q.id)).filter(t => t.total >= 3);
+  const castHit = cast.filter(t => t.rows.filter(x => x.c === t.rows[0].c).some(x => norm(x.name) === norm(t.mine))).length;
+  const myCV = myCVotes().length;
+  const role = (r.n && r.pts && r.rank === 1) ? 'Quiz-Champion'
+    : (mc && mc.n && cRank === 1) ? 'Kostüm-Star'
+    : (r.n >= 5 && r.pts === r.n) ? 'Mastermind'
+    : (r.pts && (r.rank === 2 || r.rank === 3)) ? 'Oscar-nominiert'
+    : (mc && mc.n && (cRank === 2 || cRank === 3)) ? 'Stilikone'
+    : titles.length >= 3 ? 'Publikumsliebling'
+    : sub >= 3 ? 'Drehbuchautor:in'
+    : (cast.length >= 5 && castHit / cast.length >= 0.7) ? 'Castingchef:in'
+    : (r.n >= 5 && r.pts / r.n <= 0.3) ? 'Komödienstar'
+    : myCV >= MAXV ? 'Jurymitglied'
+    : (r.n + voted.length >= 10) ? 'Dauergast im Kinosaal'
+    : (mc && !mc.n) ? 'Geheimtipp'
+    : (!r.n && !voted.length && !sub && !myCV) ? 'Stummfilmstar'
+    : 'Premierengast';
+  const lead = HOSTS.some(h => norm(h) === norm(p.name));
+  const src = mc ? photoSrc(me) : '';
+  const time = new Date().toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'});
+  return `<div class="credits"><div class="lights"></div>
+    <p class="cap">Premierenabend von Melanie, Alisa und Annika</p>
+    ${src ? `<img class="cph" src="${src}" alt="Dein Kostümfoto">` : ''}
+    <p class="cname">${esc(p.name)}</p><p class="cchar">${p.char ? 'als ' + esc(p.char) : ''}</p>
+    <p class="cap">Im Abspann geführt als</p><p class="crole">${lead ? 'Hauptdarstellerin<br>und ' : ''}${role}</p>
+    <dl>
+      <dt>Quiz</dt><dd>${r.n ? `Platz ${r.rank} von ${b.length}, ${r.pts} ${r.pts === 1 ? 'Punkt' : 'Punkte'} bei ${r.n} ${r.n === 1 ? 'Antwort' : 'Antworten'}` : 'Noch keine Frage beantwortet'}</dd>
+      <dt>Kostüm</dt><dd>${mc ? `Platz ${cRank} von ${cs.length}, ${stim(mc.n)}` : 'Kein Foto hochgeladen'}</dd>
+      <dt>Wer würde am ehesten …?</dt><dd>Bei ${voted.length} von ${all.length} Fragen abgestimmt</dd>
+      <dt>Deine Titel</dt><dd>${titles.length ? titles.map(q => `<span>… ${esc(q.text)}</span>`).join('') : 'Noch kein Titel. Das kann sich im Lauf des Abends ändern.'}</dd>
+      <dt>Eingereichte Fragen</dt><dd>${sub}</dd>
+    </dl><div class="lights"></div></div>
+  <p class="note">${fin ? 'Das ist der Endstand des Abends.' : 'Stand von ' + time + ' Uhr.'} Titel zählen nur bei Fragen, bei denen du selbst abgestimmt hast. Mach ein Bildschirmfoto, wenn du deinen Abspann behalten willst.</p>
+  ${det('roles', 'Welche Rollen gibt es?', `<ul class="roles">${ROLE_INFO.map(x => `<li class="${x[0] === role || (lead && x[0] === 'Hauptdarstellerin') ? 'cur' : ''}"><b>${x[0]}</b><span>${x[1]}</span></li>`).join('')}</ul>
+  <p class="note">${fin ? 'Dazu kamen ein paar Überraschungsrollen.' : 'Es zählt die oberste Rolle der Liste, die auf dich zutrifft, und sie kann sich den ganzen Abend ändern. Dazu kommen ein paar Überraschungsrollen.'}</p>`)}`;
+}
 function vRes(){
-  let h = `<section class="ticket"><h2>Ergebnisse</h2><div class="seg"><button class="${ui.seg === 'quiz' ? 'on' : ''}" data-act="seg" data-s="quiz">Quiz</button><button class="${ui.seg === 'ww' ? 'on' : ''}" data-act="seg" data-s="ww">Wer würde …?</button><button class="${ui.seg === 'cost' ? 'on' : ''}" data-act="seg" data-s="cost">Kostüme</button></div>`;
+  let h = `<section class="ticket"><h2>Ergebnisse</h2>
+  <button class="absbtn ${ui.seg === 'me' ? 'on' : ''}" aria-pressed="${ui.seg === 'me'}" data-act="seg" data-s="me"><span class="lights"></span><b>Mein Abspann</b><small>${ui.seg === 'me' ? 'Deine Bilanz steht hier drunter' : 'Deine persönliche Bilanz des Abends ansehen'}</small></button>
+  <div class="seg"><button class="${ui.seg === 'quiz' ? 'on' : ''}" data-act="seg" data-s="quiz">Quiz</button><button class="${ui.seg === 'ww' ? 'on' : ''}" data-act="seg" data-s="ww">Wer würde …?</button><button class="${ui.seg === 'cost' ? 'on' : ''}" data-act="seg" data-s="cost">Kostüme</button></div>`;
   if (ui.seg === 'quiz'){
     h += `<p class="note">Ein Punkt pro richtig beantworteter Frage. Der Stand läuft den ganzen Abend mit.</p>${boardHtml(0)}`;
     const mine = list(D.quiz).filter(q => D.quizAns && D.quizAns[q.id] && D.quizAns[q.id][me]);
     if (mine.length) h += `<h3>Deine Antworten</h3>` + mine.map(q => { const a = D.quizAns[q.id][me];
       return det('q' + q.id, `${a.ok ? '✓' : '✗'} ${esc(q.text)}`, quizResultOpts(q, arr(a.s).map(Number), quizStat(q.id))); }).join('');
+  } else if (ui.seg === 'me'){
+    h += abspann();
   } else if (ui.seg === 'cost'){
     const rows = costumes().map(c => ({id:c.id, n:cVotes(c.id), p:D.players[c.id]})).sort((a,b) => b.n - a.n || a.p.name.localeCompare(b.p.name, 'de'));
     rows.forEach((r,i) => { r.rank = (i && rows[i-1].n === r.n) ? rows[i-1].rank : i + 1; });
@@ -2905,7 +3064,7 @@ function vRes(){
     const titles = [];
     const items = voted.map(q => { const t = tally(q.id), top = t.rows.filter(r => r.c === t.rows[0].c);
       if (top.some(r => norm(r.name) === norm(myName()))) titles.push(q.text);
-      return det('w' + q.id, `… ${esc(q.text)}<small>${top.map(r => esc(r.name)).join(', ')} mit ${top[0].c} von ${t.total} ${t.total === 1 ? 'Stimme' : 'Stimmen'}</small>`, barsHtml(t)); });
+      return det('w' + q.id, `… ${esc(q.text)}<small>${q.bday ? 'Geburtstagsrunde: ' : ''}${top.map(r => esc(r.name)).join(', ')} mit ${top[0].c} von ${t.total} ${t.total === 1 ? 'Stimme' : 'Stimmen'}</small>`, barsHtml(t)); });
     if (titles.length) h += `<p><b>Dich nennen die meisten bei:</b> ${titles.map(t => '… ' + esc(t)).join(' ')}</p>`;
     h += items.length ? items.join('') : `<p>Hier erscheint jede Frage, sobald du abgestimmt hast.</p>`;
     const locked = all.length - voted.length;
@@ -2938,16 +3097,22 @@ function vAdmin(){
   const svg = qrSvg(), isFile = location.protocol === 'file:';
   const qRow = (kind, q, n) => `<li><span>${kind === 'ww' ? '… ' : ''}${esc(q.text)}<small>${q.off ? 'Regie' : esc(q.byName || 'Gast')}, ${n} ${kind === 'ww' ? (n === 1 ? 'Stimme' : 'Stimmen') : (n === 1 ? 'Antwort' : 'Antworten')}</small></span><button class="btn ghost small" data-act="del-q" data-kind="${kind}" data-id="${q.id}">Löschen</button></li>`;
   const ww = list(D.ww), quiz = list(D.quiz), players = list(D.players), cands = list(D.cands);
-  return `<section class="ticket"><h2>Gäste einladen</h2>
+  const wwN = ww.filter(q => !q.bday), wwB = ww.filter(q => q.bday);
+  const wwList = l => l.length ? `<ul class="plain">${l.map(q => qRow('ww', q, Object.keys((D.wwVotes && D.wwVotes[q.id]) || {}).length)).join('')}</ul>` : '<p class="note">Noch keine Fragen.</p>';
+  return `${isFinale() ? `<section class="ticket"><h2>Abspann-Modus ist aktiv</h2><p>Alle Gäste sehen nur noch ihren persönlichen Abspann. Abstimmen, Antworten, Einreichen und Fotos sind gesperrt.</p><div class="row"><button class="btn" data-act="finale" data-v="">Spiel wieder öffnen</button></div></section>` : ''}
+  <section class="ticket"><h2>Gäste einladen</h2>
     ${Store.local ? `<p class="warn">Testmodus: Der Spielstand liegt nur auf diesem Gerät. Für den Abend unten „Verbindung ändern“ wählen und die Firebase-Adresse eintragen.</p>` : ''}
     ${isFile ? `<p class="warn">Diese Seite ist gerade als Datei geöffnet. Andere Handys erreichen sie erst, wenn sie im Internet liegt.</p>` : ''}
     <div class="qr">${svg || ''}</div><p class="url">${esc(joinUrl())}</p>
     <div class="row"><button class="btn" data-act="screen">Leinwand-Ansicht fürs Tablet öffnen</button></div></section>
   <section class="ticket"><h2>Frage hinzufügen</h2><p class="note">Quizfragen, die du hier anlegst, sehen nur die anderen Gäste im Quiz. Dir selbst werden sie nicht gestellt, weil du die Lösung kennst.</p>${formHtml(true)}</section>
   <section class="ticket"><h2>Fragen verwalten</h2>
-    <h3>Wer würde am ehesten …? (${ww.length})</h3>${ww.length ? `<ul class="plain">${ww.map(q => qRow('ww', q, Object.keys((D.wwVotes && D.wwVotes[q.id]) || {}).length)).join('')}</ul>` : '<p class="note">Noch keine Fragen.</p>'}
+    <h3>Wer würde am ehesten …? (${wwN.length})</h3>${wwList(wwN)}
+    <h3>Geburtstagsrunde (${wwB.length})</h3>${wwList(wwB)}
     <h3>Quiz (${quiz.length})</h3>${quiz.length ? `<ul class="plain">${quiz.map(q => qRow('quiz', q, quizStat(q.id).n)).join('')}</ul>` : '<p class="note">Noch keine Fragen.</p>'}
-    ${D.meta && D.meta.seeded ? '' : `<div class="row"><button class="btn ghost" data-act="seed">Beispielfragen zu Film und Serie laden</button></div>`}</section>
+    ${D.meta && D.meta.seeded ? '' : `<div class="row"><button class="btn ghost" data-act="seed">Beispielfragen zu Film und Serie laden</button></div>`}
+    ${D.meta && D.meta.seededQ2 ? '' : `<div class="row"><button class="btn ghost" data-act="seed-quiz2">20 weitere Quizfragen laden</button></div>`}
+    ${D.meta && D.meta.seededB ? '' : `<div class="row"><button class="btn ghost" data-act="seed-bday">Fragen für die Geburtstagsrunde laden</button></div>`}</section>
   <section class="ticket"><h2>Namen zur Auswahl</h2>
     <p class="note">Diese Namen stehen bei „Wer würde am ehesten …?“ zur Wahl. Melanie, Alisa und Annika sind immer dabei.</p>
     <div class="seg"><button class="${!D.meta || D.meta.auto !== false ? 'on' : ''}" data-act="auto" data-v="1">Alle Gäste wählbar</button><button class="${D.meta && D.meta.auto === false ? 'on' : ''}" data-act="auto" data-v="">Nur diese Liste</button></div>
@@ -2957,6 +3122,12 @@ function vAdmin(){
     <ul class="plain">${players.map(p => `<li><span>${esc(p.name)}${p.char ? `<small>als ${esc(p.char)}</small>` : ''}</span>${p.id === me ? '<small>du</small>' : `<button class="btn ghost small" data-act="del-player" data-id="${p.id}">Entfernen</button>`}</li>`).join('')}</ul></section>
   <section class="ticket"><h2>Kostümfotos (${costumes().length})</h2>
     ${costumes().length ? `<ul class="plain">${costumes().map(c => `<li><span>${esc(D.players[c.id].name)}<small>${stim(cVotes(c.id))}</small></span><button class="btn ghost small" data-act="cdel-admin" data-id="${c.id}">Foto löschen</button></li>`).join('')}</ul>` : '<p class="note">Noch keine Fotos.</p>'}</section>
+  ${isFinale() ? '' : `<section class="ticket"><h2>Nach der Party</h2>
+    <p class="note">Im Abspann-Modus sehen alle Gäste nur noch ihren persönlichen Abspann mit einem Dankeschön. Das Spiel ist dann gesperrt, der Stand bleibt stehen. Du kannst jederzeit zurückschalten.</p>
+    <div class="row"><button class="btn" data-act="finale" data-v="1">Nur noch den Abspann zeigen</button></div></section>`}
+  <section class="ticket"><h2>Regie-PIN ändern</h2>
+    <p class="note">Die neue PIN gilt sofort. Geräte, auf denen die Regie gerade offen ist, bleiben angemeldet, bis dort „Regie schließen“ getippt oder der Browser-Tab geschlossen wird.</p>
+    <div class="inline"><input type="password" inputmode="numeric" data-m="a.pin2" data-enter="pin-change" maxlength="20" autocomplete="off" placeholder="Neue PIN, mindestens 4 Zeichen" aria-label="Neue Regie-PIN" value="${esc(ui.a.pin2)}"><button class="btn small" data-act="pin-change">Ändern</button></div></section>
   <section class="ticket"><h2>Zurücksetzen</h2>
     <p class="note">Praktisch nach einem Probelauf vor der Party.</p>
     <div class="row"><button class="btn ghost" data-act="reset-answers">Nur Stimmen und Antworten löschen</button><button class="btn ghost" data-act="reset-all">Alles löschen, auch Fragen, Fotos und Gäste</button></div>
@@ -2978,13 +3149,19 @@ function render(){
   else if (ui.view === 'screen') a.innerHTML = vScreen();
   else if (!me || !D.players || !D.players[me]) a.innerHTML = vJoin();
   else a.innerHTML = vMain();
+  if (ui.ask) a.insertAdjacentHTML('beforeend', `<div class="ask" role="alertdialog" aria-modal="true" aria-label="Rückfrage"><section class="ticket"><h2>Sicher?</h2><p>${esc(ui.ask.text)}</p><div class="row"><button class="btn" data-act="ask-yes">Ja, weiter</button><button class="btn ghost" data-act="ask-no">Abbrechen</button></div></section></div>`);
 }
 let toastT;
 function toast(msg){ const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 3200); }
 
 /* ---------- Aktionen ---------- */
-function act(a, ds){
+function ask(text, a, ds){ ui.ask = {text, a, ds:Object.assign({}, ds)}; render(); return true; }
+function act(a, ds, ok){
   ui.err = '';
+  if (a === 'ask-no'){ ui.ask = null; render(); return; }
+  if (a === 'ask-yes'){ const q = ui.ask; ui.ask = null; if (q) act(q.a, q.ds, true); else render(); return; }
+  if (isFinale() && ['vote','answer','cvote','cdel'].includes(a)) return;
+  if (isFinale() && a === 'submit' && !ui.admin) return;
   switch (a){
     case 'setup-save': {
       const u = (ui.s.db || '').trim().replace(/\/+$/, '');
@@ -2995,13 +3172,18 @@ function act(a, ds){
     case 'setup-local': LS.set('kq_db', 'local'); dbCfg = 'local'; Store.init('local'); break;
     case 'reload': location.reload(); return;
     case 'change-db':
-      if (!confirm('Verbindung ändern? Dieses Gerät verlässt den aktuellen Spielstand. Der Spielstand selbst bleibt erhalten.')) return;
+      if (!ok && ask('Verbindung ändern? Dieses Gerät verlässt den aktuellen Spielstand. Der Spielstand selbst bleibt erhalten.', a, ds)) return;
       LS.del('kq_db'); try { history.replaceState(null, '', location.pathname + location.search); } catch(e){}
       location.reload(); return;
     case 'join': {
       const name = ui.j.name.trim().replace(/\s+/g, ' ');
       if (!name){ ui.err = 'Trag deinen Namen ein, damit die anderen dich wählen können.'; break; }
       const ex = Object.keys(D.players || {}).find(p => norm(D.players[p].name) === norm(name));
+      if (isFinale()){
+        if (ex){ me = ex; LS.set('kq_pid', me); ui.dup = null; ui.tab = 'res'; }
+        else ui.err = 'Diesen Namen finden wir nicht auf der Gästeliste. Schreib ihn so, wie du ihn am Abend eingegeben hast.';
+        break;
+      }
       if (ex){ ui.dup = ex; break; }
       me = uid('p'); LS.set('kq_pid', me); ui.dup = null;
       Store.write('players/' + me, {name, char:ui.j.char.trim(), t:Date.now()}); return;
@@ -3019,10 +3201,10 @@ function act(a, ds){
       Store.write('costVotes/' + me + '/' + id, true); return;
     }
     case 'cdel':
-      if (!confirm('Dein Kostümfoto löschen? Die Stimmen dafür gehen verloren.')) return;
+      if (!ok && ask('Dein Kostümfoto löschen? Die Stimmen dafür gehen verloren.', a, ds)) return;
       { const up = costumeRemoval(me); dropPhoto(me); Store.write('', up, true); } return;
     case 'cdel-admin':
-      if (!confirm('Dieses Kostümfoto mit allen Stimmen löschen?')) return;
+      if (!ok && ask('Dieses Kostümfoto mit allen Stimmen löschen?', a, ds)) return;
       { const up = costumeRemoval(ds.id); dropPhoto(ds.id); Store.write('', up, true); } return;
     case 'seg': ui.seg = ds.s; break;
     case 'pick': ui.pick = norm(ui.pick) === norm(ds.n) ? null : ds.n; break;
@@ -3062,11 +3244,12 @@ function act(a, ds){
       const d = ui.draft, off = !!ds.off, base = {by:me, byName:myName(), t:Date.now()};
       if (off) base.off = true;
       let text = d.text.trim().replace(/\s+/g, ' ');
-      if (d.kind === 'ww'){
-        text = text.replace(/^wer würde am ehesten/i, '').replace(/^[\s.…]+/, '').trim();
+      if (d.kind === 'ww' || d.kind === 'bday'){
+        if (d.kind === 'bday'){ if (!off || !ui.admin) break; base.bday = true; }
+        text = text.replace(/^wer (von den dreien )?würde am ehesten/i, '').replace(/^[\s.…]+/, '').trim();
         if (!text){ ui.err = 'Schreib auf, was die Person am ehesten tun würde.'; break; }
         if (!/[?!.]$/.test(text)) text += '?';
-        ui.draft = newDraft('ww');
+        ui.draft = newDraft(d.kind);
         toast(off ? 'Frage hinzugefügt.' : 'Frage eingereicht – alle können jetzt abstimmen.');
         Store.write('ww/' + uid('w'), Object.assign({text}, base)); return;
       }
@@ -3084,13 +3267,26 @@ function act(a, ds){
       if (ui.a.pin.trim().length < 4){ ui.err = 'Die PIN braucht mindestens 4 Zeichen.'; break; }
       ui.admin = true; SS.set('kq_admin', '1');
       { const h = hash(ui.a.pin.trim()); ui.a.pin = ''; Store.write('meta/pin', h); } return;
+    case 'finale':
+      if (!ui.admin) break;
+      if (ds.v && !ok && ask('Abspann-Modus einschalten? Alle Gäste sehen dann nur noch ihren Abspann, das Spiel ist gesperrt.', a, ds)) return;
+      toast(ds.v ? 'Abspann-Modus ist aktiv.' : 'Das Spiel ist wieder geöffnet.');
+      window.scrollTo(0, 0);
+      Store.write('meta/finale', ds.v ? true : null); return;
+    case 'pin-change': {
+      if (!ui.admin) break;
+      const np = ui.a.pin2.trim();
+      if (np.length < 4){ toast('Die neue PIN braucht mindestens 4 Zeichen.'); break; }
+      ui.a.pin2 = ''; toast('Regie-PIN geändert.');
+      Store.write('meta/pin', hash(np)); return;
+    }
     case 'pin-enter':
       if (D.meta && hash(ui.a.pin.trim()) === D.meta.pin){ ui.admin = true; SS.set('kq_admin', '1'); ui.a.pin = ''; }
       else ui.err = 'Diese PIN stimmt nicht.';
       break;
     case 'admin-exit': ui.admin = false; SS.del('kq_admin'); ui.tab = 'ww'; break;
     case 'del-q':
-      if (!confirm('Diese Frage mit allen Stimmen und Antworten löschen?')) return;
+      if (!ok && ask('Diese Frage mit allen Stimmen und Antworten löschen?', a, ds)) return;
       Store.write('', {[ds.kind + '/' + ds.id]: null, [(ds.kind === 'ww' ? 'wwVotes/' : 'quizAns/') + ds.id]: null}, true); return;
     case 'add-cand': {
       const n = ui.a.cand.trim().replace(/\s+/g, ' ');
@@ -3102,7 +3298,7 @@ function act(a, ds){
     case 'del-cand': Store.write('cands/' + ds.id, null); return;
     case 'auto': Store.write('meta/auto', !!ds.v); return;
     case 'del-player':
-      if (!confirm('Diesen Gast entfernen? Er oder sie kann sich danach neu einwählen.')) return;
+      if (!ok && ask('Diesen Gast entfernen? Er oder sie kann sich danach neu einwählen.', a, ds)) return;
       { const up = costumeRemoval(ds.id); up['players/' + ds.id] = null; up['costVotes/' + ds.id] = null;
         if (D.costumes && D.costumes[ds.id]) dropPhoto(ds.id);
         Store.write('', up, true); } return;
@@ -3113,13 +3309,25 @@ function act(a, ds){
       toast('Beispielfragen geladen.');
       Store.write('', up, true); return;
     }
+    case 'seed-quiz2': {
+      const up = {'meta/seededQ2': true}, now = Date.now(), name = myName();
+      SEED_QUIZ2.forEach((q,i) => { up['quiz/' + uid('q')] = Object.assign({by:me, byName:name, off:true, t:now + i}, q); });
+      toast('20 Quizfragen geladen.');
+      Store.write('', up, true); return;
+    }
+    case 'seed-bday': {
+      const up = {'meta/seededB': true}, now = Date.now(), name = myName();
+      SEED_BDAY.forEach((t,i) => { up['ww/' + uid('w')] = {text:t, by:me, byName:name, off:true, bday:true, t:now + i}; });
+      toast('Geburtstagsrunde geladen.');
+      Store.write('', up, true); return;
+    }
     case 'reset-answers':
-      if (!confirm('Alle Stimmen und Quizantworten löschen? Fragen, Gäste und Kostümfotos bleiben.')) return;
+      if (!ok && ask('Alle Stimmen und Quizantworten löschen? Fragen, Gäste und Kostümfotos bleiben.', a, ds)) return;
       Store.write('', {wwVotes:null, quizAns:null, costVotes:null}, true); return;
     case 'reset-all':
-      if (!confirm('Wirklich alles löschen? Fragen, Gäste, Kostümfotos, Stimmen und Antworten sind dann weg. Nur die Regie-PIN bleibt.')) return;
+      if (!ok && ask('Wirklich alles löschen? Fragen, Gäste, Kostümfotos, Stimmen und Antworten sind dann weg. Nur die Regie-PIN bleibt.', a, ds)) return;
       Store.delAllPhotos(); Object.keys(photos).forEach(k => { IDB.del(k); delete photos[k]; });
-      Store.write('', {wwVotes:null, quizAns:null, ww:null, quiz:null, players:null, cands:null, costumes:null, costVotes:null, 'meta/seeded':null}, true); return;
+      Store.write('', {wwVotes:null, quizAns:null, ww:null, quiz:null, players:null, cands:null, costumes:null, costVotes:null, 'meta/seeded':null, 'meta/seededB':null, 'meta/seededQ2':null, 'meta/finale':null}, true); return;
     case 'screen': ui.view = 'screen'; window.scrollTo(0, 0); break;
     case 'screen-exit': ui.view = 'app'; break;
   }
@@ -3134,7 +3342,7 @@ document.addEventListener('input', e => {
 });
 document.addEventListener('change', e => {
   const t = e.target;
-  if (!t.dataset || t.dataset.file !== 'costume' || !t.files || !t.files[0] || ui.up) return;
+  if (!t.dataset || t.dataset.file !== 'costume' || !t.files || !t.files[0] || ui.up || isFinale()) return;
   const f = t.files[0];
   ui.err = ''; ui.up = true; render();
   shrink(f).then(d => Store.putPhoto(me, d).then(() => d)).then(d => {
