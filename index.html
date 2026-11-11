@@ -159,6 +159,23 @@ summary small{display:block;font-weight:400;color:var(--mute);font-size:14px;mar
 .roles li.cur b::after{content:" (deine Rolle)";font-weight:400;font-size:13px;color:var(--mute)}
 .ask{position:fixed;inset:0;background:#000c;z-index:30;display:grid;place-items:center;padding:20px}
 .ask .ticket{max-width:420px;width:100%;margin:0}
+.count{font:400 clamp(22px,6.6vw,30px)/1.2 var(--disp);color:var(--velvet);margin:4px 0 10px}
+.feat{list-style:none;padding:0;margin:8px 0}
+.feat li{padding:9px 0;border-bottom:1px solid #cdbb91}
+.feat li:last-child{border-bottom:0}
+.feat b{display:block}
+.feat span{font-size:15px;color:var(--mute)}
+.start h3{margin-top:0;display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+.start h3 small{font-weight:400;color:var(--mute);font-size:14px}
+.steps{list-style:none;padding:0;margin:0 0 6px}
+.steps li{display:flex;gap:10px;align-items:center;padding:6px 0}
+.steps .mk{flex:none;width:24px;height:24px;border:2px solid var(--ink);border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:700}
+.steps li.done .mk{background:var(--ok);border-color:var(--ok);color:#fff}
+.steps li.done{color:var(--mute)}
+.steps li.later{color:var(--mute)}
+.steps li.later .mk{border-color:#b7a273}
+.steps .link{padding:2px 0;font-weight:700;text-align:left}
+.start>.link{font-size:14px;color:var(--mute)}
 /* Abspann */
 .absbtn{display:block;width:100%;border:0;border-radius:10px;background:var(--night);color:var(--paper);padding:10px 14px 13px;margin:2px 0 14px;text-align:center;box-shadow:0 6px 16px -8px #000a}
 .absbtn .lights{display:block;margin-bottom:9px}
@@ -2589,6 +2606,19 @@ const ROLE_INFO = [
   ['Premierengast', 'für alle, die dabei sind']
 ];
 const isFinale = () => !!(D.meta && D.meta.finale);
+const isPre = () => !!(D.meta && D.meta.pre) && !isFinale();
+const PARTY_DEFAULT = new Date('2026-11-14T18:30:00+01:00').getTime();
+const partyAt = () => (D.meta && +D.meta.partyAt) || PARTY_DEFAULT;
+const partyText = () => { const d = new Date(partyAt()); return d.toLocaleDateString('de-DE', {day:'numeric', month:'long'}) + ', ' + d.toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'}) + ' Uhr'; };
+function countdown(){
+  const ms = partyAt() - Date.now();
+  if (ms <= 0) return '';
+  const m = Math.ceil(ms / 60000), d = Math.floor(m / 1440), h = Math.floor(m % 1440 / 60), mi = m % 60, parts = [];
+  if (d) parts.push(d === 1 ? '1 Tag' : d + ' Tage');
+  if (d || h) parts.push(h === 1 ? '1 Stunde' : h + ' Stunden');
+  parts.push(mi === 1 ? '1 Minute' : mi + ' Minuten');
+  return parts.length > 1 ? parts.slice(0, -1).join(', ') + ' und ' + parts[parts.length - 1] : parts[0];
+}
 const wwLabel = q => q.bday ? 'Geburtstagsrunde: Wer von den dreien würde am ehesten …' : 'Wer würde am ehesten …';
 const $ = s => document.querySelector(s);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -2619,7 +2649,7 @@ let dirty = false;
 const ui = {
   tab:'ww', seg:'quiz', view:'app', admin: SS.get('kq_admin') === '1',
   pick:null, sel:[], reveal:null, skip:{}, cur:{ww:null, quiz:null}, dup:null, err:'', open:{}, up:false, zoom:null, ask:null,
-  draft:newDraft('ww'), j:{name:'', char:''}, a:{pin:'', cand:'', pin2:''}, s:{db:''}
+  draft:newDraft('ww'), j:{name:'', char:''}, a:{pin:'', cand:'', pin2:'', when:''}, s:{db:''}
 };
 
 /* ---------- Datenhaltung ---------- */
@@ -2853,7 +2883,7 @@ function vJoin(){
   <div class="row"><button class="btn" data-act="join">Abspann ansehen</button></div></section>`;
   const dup = ui.dup && D.players && D.players[ui.dup];
   return `${marquee()}<section class="ticket"><h2>Dein Ticket für heute Abend</h2>
-  <p>Den ganzen Abend laufen „Wer würde am ehesten …?“, ein Quiz und das Kostüm-Voting. Spiel mit, wann du Lust hast, und reich eigene Fragen ein.</p>
+  <p>${isPre() ? 'Der Vorverkauf läuft. Sichere dir dein Ticket für die Premiere am ' + partyText() + ' und reich schon eigene Fragen ein.' : 'Den ganzen Abend laufen „Wer würde am ehesten …?“, ein Quiz und das Kostüm-Voting. Spiel mit, wann du Lust hast, und reich eigene Fragen ein.'}</p>
   <label>Dein Name<input type="text" data-m="j.name" data-enter="join" maxlength="24" autocomplete="given-name" value="${esc(ui.j.name)}"></label>
   <label>Als wer bist du heute hier? <span class="opt">(freiwillig)</span><input type="text" data-m="j.char" data-enter="join" maxlength="30" placeholder="z. B. Hermine Granger" value="${esc(ui.j.char)}"></label>
   ${ui.err ? `<p class="err">${esc(ui.err)}</p>` : ''}
@@ -2884,14 +2914,57 @@ function vFinale(){
     <p>Danke, dass du bei der Premiere von Melanie, Alisa und Annika dabei warst. Hier läuft dein persönlicher Abspann. Fortsetzung folgt.</p>
     ${abspann(true)}</section>`}</main>`;
 }
+function startCard(pre){
+  if (LS.get('kq_starthide_' + me) === '1') return '';
+  const has = (o) => Object.keys(o || {}).some(q => o[q] && o[q][me]);
+  const steps = [
+    ['submit', 'Eigene Frage einreichen', 'Eigene Frage eingereicht', list(D.ww).concat(list(D.quiz)).some(q => q.by === me && !q.off), false],
+    ['ww', 'Erste Stimme bei „Wer würde am ehesten …?“ abgeben', 'Erste Stimme abgegeben', has(D.wwVotes), pre],
+    ['quiz', 'Erste Quizfrage beantworten', 'Erste Quizfrage beantwortet', has(D.quizAns), pre],
+    ['cost', 'Kostümfoto hochladen', 'Kostümfoto hochgeladen', !!(D.costumes && D.costumes[me]), pre]
+  ];
+  const done = steps.filter(x => x[3]).length;
+  if (done === steps.length) return '';
+  return `<section class="ticket start"><h3>Dein Start <small>${done} von ${steps.length} erledigt</small></h3>
+  <ul class="steps">${steps.map((x,i) => x[3] ? `<li class="done"><span class="mk">✓</span>${x[2]}</li>`
+    : x[4] ? `<li class="later"><span class="mk">${i + 1}</span>${x[1]} <small>(ab dem Partyabend)</small></li>`
+    : `<li><span class="mk">${i + 1}</span><button class="link" data-act="start-go" data-tab="${x[0]}">${x[1]}</button></li>`).join('')}</ul>
+  <button class="link" data-act="start-hide">Liste ausblenden</button></section>`;
+}
+function mineList(){
+  const mine = list(D.ww).filter(q => q.by === me && !q.off).map(q => '… ' + q.text).concat(list(D.quiz).filter(q => q.by === me && !q.off).map(q => q.text));
+  return mine.length ? `<section class="ticket"><h3 style="margin-top:0">Von dir eingereicht</h3><ul class="plain">${mine.map(t => `<li>${esc(t)}</li>`).join('')}</ul></section>` : '';
+}
+function vPre(){
+  const p = D.players[me], adm = ui.tab === 'admin', cd = countdown(), n = list(D.players).length;
+  return `${marquee()}
+  <div class="bar"><span class="me">${esc(p.name)}${p.char ? ` <i>als ${esc(p.char)}</i>` : ''}</span><span class="conn ${Store.online ? '' : 'off'}">${Store.online ? (Store.local ? 'Testmodus' : 'live') : 'offline'}</span><button class="link" data-act="tab" data-tab="${adm ? 'ww' : 'admin'}">${adm ? 'Zum Vorverkauf' : 'Regie'}</button></div>
+  <main>${adm ? vAdmin() : `<section class="ticket has-stub"><div class="stub"><span>Vorverkauf</span><b>Premiere am ${partyText()}</b></div>
+    <h2>Dein Ticket ist gelöst</h2>
+    ${cd ? `<p>Der Saal öffnet in</p><p class="count">${cd}</p>` : `<p class="count">Gleich geht’s los</p><p>Die Regie öffnet den Saal in Kürze.</p>`}
+    <p>${n === 1 ? 'Du bist der erste Gast mit Ticket.' : 'Schon ' + n + ' Gäste haben ihr Ticket.'} Bis zum Partyabend kannst du schon Fragen einreichen, alles andere startet zur Premiere.</p></section>
+  <section class="ticket"><h2>Das erwartet dich am Abend</h2>
+    <ul class="feat">
+      <li><b>Wer würde am ehesten …?</b><span>Alle stimmen ab, wem aus der Runde was am ehesten zuzutrauen ist.</span></li>
+      <li><b>Geburtstagsrunde</b><span>Dieselbe Frage, aber zur Wahl stehen nur Melanie, Alisa und Annika.</span></li>
+      <li><b>Quiz</b><span>Fragen rund um Film und Serie, ein Punkt pro richtiger Antwort. Googeln gilt nicht.</span></li>
+      <li><b>Kostüm-Voting</b><span>Du lädst ein Foto deines Kostüms hoch und vergibst drei Stimmen an die anderen.</span></li>
+      <li><b>Mein Abspann</b><span>Deine persönliche Bilanz des Abends, mit einer Rolle wie im Filmabspann.</span></li>
+    </ul>
+    <p class="note">Alles läuft den ganzen Abend nebenbei auf deinem Handy. Du spielst, wann du Lust hast, und siehst jederzeit den aktuellen Stand.</p></section>
+  ${startCard(true)}
+  <section class="ticket" id="subform"><h2>Schon jetzt: deine Frage für alle</h2><p>Reich Fragen für den Abend ein. Die anderen sehen sie erst zur Premiere.${ui.draft.kind === 'quiz' ? ' Deine eigene Quizfrage beantwortest du selbst nicht.' : ''}</p>${formHtml(false)}</section>
+  ${mineList()}`}</main>`;
+}
 function vMain(){
   if (isFinale()) return vFinale();
+  if (isPre()) return vPre();
   const p = D.players[me], news = costumeNews();
   const body = ui.tab === 'ww' ? vWW() : ui.tab === 'quiz' ? vQuiz() : ui.tab === 'cost' ? vCost() : ui.tab === 'submit' ? vSubmit() : ui.tab === 'res' ? vRes() : vAdmin();
   const zsrc = ui.zoom ? photoSrc(ui.zoom) : '';
   return `${marquee()}
   <div class="bar"><span class="me">${esc(p.name)}${p.char ? ` <i>als ${esc(p.char)}</i>` : ''}</span><span class="conn ${Store.online ? '' : 'off'}">${Store.online ? (Store.local ? 'Testmodus' : 'live') : 'offline'}</span><button class="link" data-act="tab" data-tab="admin">Regie</button></div>
-  <main>${body}</main>
+  <main>${['ww','quiz','cost','submit'].includes(ui.tab) ? startCard(false) : ''}${body}</main>
   <nav class="tabs">${tabBtn('ww','🎭','Wer würde …?', wwOpen().length)}${tabBtn('quiz','🎬','Quiz', quizOpen().length)}${tabBtn('cost','📸','Kostüme', news, 'neue Stimmen')}${tabBtn('submit','✍️','Frage einreichen')}${tabBtn('res','🏆','Ergebnisse')}</nav>
   ${zsrc ? `<button class="zoom" data-act="zoom-close" aria-label="Foto schließen"><img src="${zsrc}" alt=""></button>` : ''}`;
 }
@@ -2985,9 +3058,8 @@ function formHtml(official){
   return h;
 }
 function vSubmit(){
-  const mine = list(D.ww).filter(q => q.by === me && !q.off).map(q => '… ' + q.text).concat(list(D.quiz).filter(q => q.by === me && !q.off).map(q => q.text));
   return `<section class="ticket"><h2>Deine Frage für alle</h2><p>Sobald du sie einreichst, können alle sie beantworten.${ui.draft.kind === 'quiz' ? ' Deine eigene Quizfrage beantwortest du selbst nicht.' : ''}</p>${formHtml(false)}</section>
-  ${mine.length ? `<section class="ticket"><h3 style="margin-top:0">Von dir eingereicht</h3><ul class="plain">${mine.map(t => `<li>${esc(t)}</li>`).join('')}</ul></section>` : ''}`;
+  ${mineList()}`;
 }
 function boardHtml(limit){
   const b = board();
@@ -3099,7 +3171,13 @@ function vAdmin(){
   const ww = list(D.ww), quiz = list(D.quiz), players = list(D.players), cands = list(D.cands);
   const wwN = ww.filter(q => !q.bday), wwB = ww.filter(q => q.bday);
   const wwList = l => l.length ? `<ul class="plain">${l.map(q => qRow('ww', q, Object.keys((D.wwVotes && D.wwVotes[q.id]) || {}).length)).join('')}</ul>` : '<p class="note">Noch keine Fragen.</p>';
-  return `${isFinale() ? `<section class="ticket"><h2>Abspann-Modus ist aktiv</h2><p>Alle Gäste sehen nur noch ihren persönlichen Abspann. Abstimmen, Antworten, Einreichen und Fotos sind gesperrt.</p><div class="row"><button class="btn" data-act="finale" data-v="">Spiel wieder öffnen</button></div></section>` : ''}
+  const whenVal = ui.a.when || (d => { const z = x => String(x).padStart(2, '0'); return d.getFullYear() + '-' + z(d.getMonth() + 1) + '-' + z(d.getDate()) + 'T' + z(d.getHours()) + ':' + z(d.getMinutes()); })(new Date(partyAt()));
+  const preOn = !!(D.meta && D.meta.pre);
+  const preSec = `<section class="ticket"><h2>${preOn ? 'Vorverkauf ist aktiv' : 'Vorverkauf'}</h2>
+    <p class="${preOn ? '' : 'note'}">${preOn ? 'Gäste können sich einwählen und Fragen einreichen. Abstimmen, Quiz, Kostümfotos und Ergebnisse sind gesperrt, auch für dich.' : 'Im Vorverkauf können sich Gäste schon einwählen und Fragen einreichen. Alles andere bleibt bis zum Partyabend gesperrt.'}</p>
+    <div class="row"><button class="btn ${preOn ? '' : 'ghost'}" data-act="pre" data-v="${preOn ? '' : 1}">${preOn ? 'Saal öffnen: Partyabend starten' : 'Auf Vorverkauf umschalten'}</button></div>
+    <label>Beginn der Party für den Countdown<span class="inline" style="margin-top:6px"><input type="datetime-local" data-m="a.when" value="${esc(whenVal)}" style="flex:1;min-width:0;padding:10px;border:2px solid var(--ink);border-radius:8px;background:#fffaf0;font-size:16px"><button class="btn small" data-act="when-save">Speichern</button></span></label></section>`;
+  return `${preOn && !isFinale() ? preSec : ''}${isFinale() ? `<section class="ticket"><h2>Abspann-Modus ist aktiv</h2><p>Alle Gäste sehen nur noch ihren persönlichen Abspann. Abstimmen, Antworten, Einreichen und Fotos sind gesperrt.</p><div class="row"><button class="btn" data-act="finale" data-v="">Spiel wieder öffnen</button></div></section>` : ''}
   <section class="ticket"><h2>Gäste einladen</h2>
     ${Store.local ? `<p class="warn">Testmodus: Der Spielstand liegt nur auf diesem Gerät. Für den Abend unten „Verbindung ändern“ wählen und die Firebase-Adresse eintragen.</p>` : ''}
     ${isFile ? `<p class="warn">Diese Seite ist gerade als Datei geöffnet. Andere Handys erreichen sie erst, wenn sie im Internet liegt.</p>` : ''}
@@ -3122,6 +3200,7 @@ function vAdmin(){
     <ul class="plain">${players.map(p => `<li><span>${esc(p.name)}${p.char ? `<small>als ${esc(p.char)}</small>` : ''}</span>${p.id === me ? '<small>du</small>' : `<button class="btn ghost small" data-act="del-player" data-id="${p.id}">Entfernen</button>`}</li>`).join('')}</ul></section>
   <section class="ticket"><h2>Kostümfotos (${costumes().length})</h2>
     ${costumes().length ? `<ul class="plain">${costumes().map(c => `<li><span>${esc(D.players[c.id].name)}<small>${stim(cVotes(c.id))}</small></span><button class="btn ghost small" data-act="cdel-admin" data-id="${c.id}">Foto löschen</button></li>`).join('')}</ul>` : '<p class="note">Noch keine Fotos.</p>'}</section>
+  ${preOn && !isFinale() ? '' : preSec}
   ${isFinale() ? '' : `<section class="ticket"><h2>Nach der Party</h2>
     <p class="note">Im Abspann-Modus sehen alle Gäste nur noch ihren persönlichen Abspann mit einem Dankeschön. Das Spiel ist dann gesperrt, der Stand bleibt stehen. Du kannst jederzeit zurückschalten.</p>
     <div class="row"><button class="btn" data-act="finale" data-v="1">Nur noch den Abspann zeigen</button></div></section>`}
@@ -3160,7 +3239,7 @@ function act(a, ds, ok){
   ui.err = '';
   if (a === 'ask-no'){ ui.ask = null; render(); return; }
   if (a === 'ask-yes'){ const q = ui.ask; ui.ask = null; if (q) act(q.a, q.ds, true); else render(); return; }
-  if (isFinale() && ['vote','answer','cvote','cdel'].includes(a)) return;
+  if ((isFinale() || isPre()) && ['vote','answer','cvote','cdel'].includes(a)) return;
   if (isFinale() && a === 'submit' && !ui.admin) return;
   switch (a){
     case 'setup-save': {
@@ -3250,7 +3329,7 @@ function act(a, ds, ok){
         if (!text){ ui.err = 'Schreib auf, was die Person am ehesten tun würde.'; break; }
         if (!/[?!.]$/.test(text)) text += '?';
         ui.draft = newDraft(d.kind);
-        toast(off ? 'Frage hinzugefügt.' : 'Frage eingereicht – alle können jetzt abstimmen.');
+        toast(off ? 'Frage hinzugefügt.' : isPre() ? 'Frage eingereicht. Am Partyabend ist sie für alle dabei.' : 'Frage eingereicht – alle können jetzt abstimmen.');
         Store.write('ww/' + uid('w'), Object.assign({text}, base)); return;
       }
       if (!text){ ui.err = 'Die Frage fehlt noch.'; break; }
@@ -3260,13 +3339,31 @@ function act(a, ds, ok){
       if (!correct.length){ ui.err = 'Markiere, welche Antwort richtig ist.'; break; }
       if (!d.multi && correct.length > 1){ ui.err = 'Markiere genau eine richtige Antwort.'; break; }
       ui.draft = newDraft('quiz');
-      toast(off ? 'Frage hinzugefügt. Du selbst bekommst sie nicht gestellt.' : 'Frage eingereicht – alle anderen können sie jetzt beantworten.');
+      toast(off ? 'Frage hinzugefügt. Du selbst bekommst sie nicht gestellt.' : isPre() ? 'Frage eingereicht. Am Partyabend ist sie für alle dabei.' : 'Frage eingereicht – alle anderen können sie jetzt beantworten.');
       Store.write('quiz/' + uid('q'), Object.assign({text, opts:filled.map(x => x.o), correct, multi:!!d.multi}, base)); return;
     }
     case 'pin-set':
       if (ui.a.pin.trim().length < 4){ ui.err = 'Die PIN braucht mindestens 4 Zeichen.'; break; }
       ui.admin = true; SS.set('kq_admin', '1');
       { const h = hash(ui.a.pin.trim()); ui.a.pin = ''; Store.write('meta/pin', h); } return;
+    case 'pre':
+      if (!ui.admin) break;
+      if (!ok && ask(ds.v ? 'Auf Vorverkauf umschalten? Abstimmen, Quiz, Kostümfotos und Ergebnisse sind dann für alle gesperrt. Der bisherige Stand bleibt erhalten.' : 'Partyabend starten? Ab dann können alle abstimmen, quizzen und Kostümfotos hochladen.', a, ds)) return;
+      toast(ds.v ? 'Vorverkauf ist aktiv.' : 'Der Saal ist geöffnet.');
+      window.scrollTo(0, 0);
+      Store.write('meta/pre', ds.v ? true : null); return;
+    case 'when-save': {
+      if (!ui.admin) break;
+      const t = new Date(ui.a.when || '').getTime();
+      if (!ui.a.when){ toast('Der Beginn ist unverändert.'); break; }
+      if (!t){ toast('Dieses Datum lässt sich nicht lesen.'); break; }
+      ui.a.when = ''; toast('Beginn gespeichert.');
+      Store.write('meta/partyAt', t); return;
+    }
+    case 'start-hide': LS.set('kq_starthide_' + me, '1'); break;
+    case 'start-go':
+      if (isPre()){ const el = document.getElementById('subform'); if (el && el.scrollIntoView) el.scrollIntoView({behavior:'smooth'}); return; }
+      ui.tab = ds.tab; ui.reveal = null; ui.zoom = null; window.scrollTo(0, 0); break;
     case 'finale':
       if (!ui.admin) break;
       if (ds.v && !ok && ask('Abspann-Modus einschalten? Alle Gäste sehen dann nur noch ihren Abspann, das Spiel ist gesperrt.', a, ds)) return;
@@ -3342,7 +3439,7 @@ document.addEventListener('input', e => {
 });
 document.addEventListener('change', e => {
   const t = e.target;
-  if (!t.dataset || t.dataset.file !== 'costume' || !t.files || !t.files[0] || ui.up || isFinale()) return;
+  if (!t.dataset || t.dataset.file !== 'costume' || !t.files || !t.files[0] || ui.up || isFinale() || isPre()) return;
   const f = t.files[0];
   ui.err = ''; ui.up = true; render();
   shrink(f).then(d => Store.putPhoto(me, d).then(() => d)).then(d => {
@@ -3361,6 +3458,15 @@ document.addEventListener('keydown', e => {
 });
 document.addEventListener('focusout', () => { if (dirty) setTimeout(() => { if (dirty && !editing()) render(); }, 60); });
 document.addEventListener('toggle', e => { const k = e.target.dataset && e.target.dataset.d; if (k) ui.open[k] = e.target.open; }, true);
+
+function refresh(){
+  if (!dbCfg || Store.local || !Store.base) return;
+  if (!Store.es || Store.es.readyState === 2) Store.connect(); else Store.resync();
+}
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') refresh(); });
+window.addEventListener('pageshow', e => { if (e.persisted) refresh(); });
+window.addEventListener('online', refresh);
+setInterval(() => { if (Store.loaded && isPre() && ui.tab !== 'admin') changed(); }, 30000);
 
 /* ---------- Start ---------- */
 (function start(){
