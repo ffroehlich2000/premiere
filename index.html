@@ -2538,7 +2538,7 @@ const ROOT = 'premiere';
 const HOSTS = ['Melanie', 'Alisa', 'Annika'];
 
 const SEED_WW = [
-  'in einem Horrorfilm als Erste:r in den Keller gehen?',
+  'in einem Horrorfilm als Erste in den Keller gehen?',
   'eine ganze Staffel in einer einzigen Nacht durchschauen?',
   'im Kino bei der traurigen Szene laut schluchzen?',
   'eine Zombie-Apokalypse überleben?',
@@ -2597,9 +2597,9 @@ const ROLE_INFO = [
   ['Mastermind', 'für alle, die im Quiz keinen Fehler machen'],
   ['Oscar-nominiert', 'für alle, die im Quiz knapp hinter der Spitze liegen'],
   ['Stilikone', 'für Kostüme, die knapp hinter dem ersten Platz liegen'],
-  ['Publikumsliebling', 'für alle, die bei „Wer würde am ehesten …?“ oft genannt werden'],
+  ['Publikumsliebling', 'für das Geburtstagskind, das bei „Wer würde am ehesten …?“ am häufigsten genannt wird'],
   ['Drehbuchautor:in', 'für alle, die fleißig Fragen einreichen'],
-  ['Castingchef:in', 'für ein gutes Gespür, wen die anderen wählen'],
+  ['Castingchef:in', 'für ein gutes Gespür, wen von den dreien die anderen wählen'],
   ['Jurymitglied', 'für alle, die beim Kostüm-Voting mitstimmen'],
   ['Dauergast im Kinosaal', 'für alle, die viel mitspielen'],
   ['Geheimtipp', 'für Kostüme, die noch entdeckt werden wollen'],
@@ -2619,7 +2619,7 @@ function countdown(){
   parts.push(mi === 1 ? '1 Minute' : mi + ' Minuten');
   return parts.length > 1 ? parts.slice(0, -1).join(', ') + ' und ' + parts[parts.length - 1] : parts[0];
 }
-const wwLabel = q => q.bday ? 'Geburtstagsrunde: Wer von den dreien würde am ehesten …' : 'Wer würde am ehesten …';
+const wwLabel = q => 'Wer von den dreien würde am ehesten …';
 const $ = s => document.querySelector(s);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const LS = {
@@ -2821,7 +2821,7 @@ function candidates(){
 }
 const myName = () => (D.players && D.players[me] && D.players[me].name) || '';
 const wwOpen = () => list(D.ww).filter(q => !(D.wwVotes && D.wwVotes[q.id] && D.wwVotes[q.id][me]));
-const quizOpen = () => list(D.quiz).filter(q => q.by !== me && !(D.quizAns && D.quizAns[q.id] && D.quizAns[q.id][me]));
+const quizOpen = () => list(D.quiz).filter(q => (q.by !== me || q.off) && !(D.quizAns && D.quizAns[q.id] && D.quizAns[q.id][me]));
 function nextOf(open, kind){
   let q = open.find(x => !ui.skip[x.id]);
   if (!q){ open.forEach(x => delete ui.skip[x.id]); q = open[0]; }
@@ -2945,9 +2945,8 @@ function vPre(){
     <p>${n === 1 ? 'Du bist der erste Gast mit Ticket.' : 'Schon ' + n + ' Gäste haben ihr Ticket.'} Bis zum Partyabend kannst du schon Fragen einreichen, alles andere startet zur Premiere.</p></section>
   <section class="ticket"><h2>Das erwartet dich am Abend</h2>
     <ul class="feat">
-      <li><b>Wer würde am ehesten …?</b><span>Alle stimmen ab, wem aus der Runde was am ehesten zuzutrauen ist.</span></li>
-      <li><b>Geburtstagsrunde</b><span>Dieselbe Frage, aber zur Wahl stehen nur Melanie, Alisa und Annika.</span></li>
-      <li><b>Quiz</b><span>Fragen rund um Film und Serie, ein Punkt pro richtiger Antwort. Googeln gilt nicht.</span></li>
+      <li><b>Wer würde am ehesten …?</b><span>Alle stimmen ab, wem von Melanie, Alisa und Annika was am ehesten zuzutrauen ist.</span></li>
+      <li><b>Quiz</b><span>Fragen rund um Film und Serie, ein Punkt pro richtiger Antwort. Googeln ist nicht erlaubt.</span></li>
       <li><b>Kostüm-Voting</b><span>Du lädst ein Foto deines Kostüms hoch und vergibst drei Stimmen an die anderen.</span></li>
       <li><b>Mein Abspann</b><span>Deine persönliche Bilanz des Abends, mit einer Rolle wie im Filmabspann.</span></li>
     </ul>
@@ -2989,7 +2988,7 @@ function vWW(){
   const q = nextOf(open, 'ww');
   return `<section class="ticket has-stub"><div class="stub"><span>${wwLabel(q)}</span><b>noch ${open.length} offen</b></div>
   <h2 class="q">… ${esc(q.text)}</h2>${byline(q)}
-  <div class="chips">${(q.bday ? HOSTS : candidates()).map(n => `<button class="chip ${norm(ui.pick) === norm(n) ? 'on' : ''}" aria-pressed="${norm(ui.pick) === norm(n)}" data-act="pick" data-n="${esc(n)}">${esc(n)}</button>`).join('')}</div>
+  <div class="chips">${HOSTS.map(n => `<button class="chip ${norm(ui.pick) === norm(n) ? 'on' : ''}" aria-pressed="${norm(ui.pick) === norm(n)}" data-act="pick" data-n="${esc(n)}">${esc(n)}</button>`).join('')}</div>
   <div class="row"><button class="btn" data-act="vote" data-id="${q.id}" ${ui.pick ? '' : 'disabled'}>Stimme abgeben</button>${open.length > 1 ? `<button class="btn ghost" data-act="skip" data-id="${q.id}">Später</button>` : ''}</div></section>`;
 }
 function quizResultOpts(q, mySel, st){
@@ -3009,7 +3008,7 @@ function vQuiz(){
     <div class="row"><button class="btn" data-act="next">Weiter</button></div></section>`;
   }
   const open = quizOpen();
-  const own = list(D.quiz).filter(x => x.by === me).length;
+  const own = list(D.quiz).filter(x => x.by === me && !x.off).length;
   const ownNote = own ? (own === 1 ? '1 Quizfrage stammt von dir. Sie wird' : own + ' Quizfragen stammen von dir. Sie werden') + ' nur den anderen gestellt, weil du die Lösung kennst.' : '';
   if (!open.length) return emptyCard(own === list(D.quiz).length && own ? 'Keine Frage für dich offen' : 'Alles beantwortet',
     !list(D.quiz).length ? 'Noch gibt es keine Quizfragen. Mach den Anfang und reich die erste ein.'
@@ -3017,7 +3016,7 @@ function vQuiz(){
   const q = nextOf(open, 'quiz');
   return `<section class="ticket has-stub"><div class="stub"><span>Quiz</span><b>noch ${open.length} offen</b></div>
   <h2 class="q">${esc(q.text)}</h2>${byline(q)}
-  <p class="note">${q.multi ? 'Mehrere Antworten können richtig sein. Wähle alle richtigen aus.' : 'Genau eine Antwort ist richtig.'}</p>
+  <p class="note">${q.multi ? 'Mehrere Antworten können richtig sein. Wähle alle richtigen aus.' : 'Genau eine Antwort ist richtig.'} Googeln ist nicht erlaubt.</p>
   <div class="opts">${arr(q.opts).map((o,i) => `<button class="optb ${q.multi ? 'multi' : ''} ${ui.sel.includes(i) ? 'on' : ''}" aria-pressed="${ui.sel.includes(i)}" data-act="opt" data-i="${i}" data-multi="${q.multi ? 1 : ''}"><span class="mk">${LETTERS[i]}</span><span>${esc(o)}</span></button>`).join('')}</div>
   <div class="row"><button class="btn" data-act="answer" data-id="${q.id}" ${ui.sel.length ? '' : 'disabled'}>Antwort abgeben</button>${open.length > 1 ? `<button class="btn ghost" data-act="skip" data-id="${q.id}">Später</button>` : ''}</div></section>`;
 }
@@ -3042,11 +3041,11 @@ function vCost(){
 }
 function formHtml(official){
   const d = ui.draft;
-  if (!official && d.kind === 'bday') d.kind = 'ww';
-  let h = `<div class="seg"><button class="${d.kind === 'ww' ? 'on' : ''}" data-act="kind" data-k="ww">${official ? 'Wer würde …?' : 'Wer würde am ehesten …?'}</button><button class="${d.kind === 'quiz' ? 'on' : ''}" data-act="kind" data-k="quiz">Quizfrage</button>${official ? `<button class="${d.kind === 'bday' ? 'on' : ''}" data-act="kind" data-k="bday">Geburtstags­runde</button>` : ''}</div>`;
+  if (d.kind === 'bday') d.kind = 'ww';
+  let h = `<div class="seg"><button class="${d.kind === 'ww' ? 'on' : ''}" data-act="kind" data-k="ww">Wer würde am ehesten …?</button><button class="${d.kind === 'quiz' ? 'on' : ''}" data-act="kind" data-k="quiz">Quizfrage</button></div>`;
   if (d.kind === 'ww' || d.kind === 'bday'){
-    h += `<label>${d.kind === 'bday' ? 'Wer von den dreien würde am ehesten …' : 'Wer würde am ehesten …'}<textarea data-m="draft.text" maxlength="140" rows="2" placeholder="… im Kino laut mitsingen?">${esc(d.text)}</textarea></label>
-    <p class="note">${d.kind === 'bday' ? 'Zur Auswahl stehen nur Melanie, Alisa und Annika. Abstimmen dürfen alle.' : 'Zur Auswahl stehen später automatisch die Namen der Gäste.'}</p>`;
+    h += `<label>Wer von den dreien würde am ehesten …<textarea data-m="draft.text" maxlength="140" rows="2" placeholder="… im Kino laut mitsingen?">${esc(d.text)}</textarea></label>
+    <p class="note">Zur Auswahl stehen Melanie, Alisa und Annika. Abstimmen dürfen alle.</p>`;
   } else {
     h += `<label>Deine Frage<textarea data-m="draft.text" maxlength="200" rows="2" placeholder="Wie heißt …?">${esc(d.text)}</textarea></label>
     <div class="seg"><button class="${!d.multi ? 'on' : ''}" data-act="multi" data-v="">Eine Antwort richtig</button><button class="${d.multi ? 'on' : ''}" data-act="multi" data-v="1">Mehrere richtig</button></div>
@@ -3077,6 +3076,9 @@ function abspann(fin){
   const all = list(D.ww), voted = all.filter(q => D.wwVotes && D.wwVotes[q.id] && D.wwVotes[q.id][me]);
   const titles = voted.filter(q => { const t = tally(q.id); return t.rows.length && t.rows.filter(x => x.c === t.rows[0].c).some(x => norm(x.name) === norm(p.name)); });
   const sub = all.filter(q => q.by === me && !q.off).length + list(D.quiz).filter(q => q.by === me && !q.off).length;
+  const lead = HOSTS.some(h => norm(h) === norm(p.name)), tc = {};
+  all.forEach(q => { const t = tally(q.id); if (t.rows.length) t.rows.filter(x => x.c === t.rows[0].c).forEach(x => { tc[norm(x.name)] = (tc[norm(x.name)] || 0) + 1; }); });
+  const myT = tc[norm(p.name)] || 0, fav = lead && myT > 0 && HOSTS.every(h => (tc[norm(h)] || 0) <= myT);
   const cast = voted.map(q => tally(q.id)).filter(t => t.total >= 3);
   const castHit = cast.filter(t => t.rows.filter(x => x.c === t.rows[0].c).some(x => norm(x.name) === norm(t.mine))).length;
   const myCV = myCVotes().length;
@@ -3085,7 +3087,7 @@ function abspann(fin){
     : (r.n >= 5 && r.pts === r.n) ? 'Mastermind'
     : (r.pts && (r.rank === 2 || r.rank === 3)) ? 'Oscar-nominiert'
     : (mc && mc.n && (cRank === 2 || cRank === 3)) ? 'Stilikone'
-    : titles.length >= 3 ? 'Publikumsliebling'
+    : fav ? 'Publikumsliebling'
     : sub >= 3 ? 'Drehbuchautor:in'
     : (cast.length >= 5 && castHit / cast.length >= 0.7) ? 'Castingchef:in'
     : (r.n >= 5 && r.pts / r.n <= 0.3) ? 'Komödienstar'
@@ -3094,7 +3096,6 @@ function abspann(fin){
     : (mc && !mc.n) ? 'Geheimtipp'
     : (!r.n && !voted.length && !sub && !myCV) ? 'Stummfilmstar'
     : 'Premierengast';
-  const lead = HOSTS.some(h => norm(h) === norm(p.name));
   const src = mc ? photoSrc(me) : '';
   const time = new Date().toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'});
   return `<div class="credits"><div class="lights"></div>
@@ -3106,10 +3107,10 @@ function abspann(fin){
       <dt>Quiz</dt><dd>${r.n ? `Platz ${r.rank} von ${b.length}, ${r.pts} ${r.pts === 1 ? 'Punkt' : 'Punkte'} bei ${r.n} ${r.n === 1 ? 'Antwort' : 'Antworten'}` : 'Noch keine Frage beantwortet'}</dd>
       <dt>Kostüm</dt><dd>${mc ? `Platz ${cRank} von ${cs.length}, ${stim(mc.n)}` : 'Kein Foto hochgeladen'}</dd>
       <dt>Wer würde am ehesten …?</dt><dd>Bei ${voted.length} von ${all.length} Fragen abgestimmt</dd>
-      <dt>Deine Titel</dt><dd>${titles.length ? titles.map(q => `<span>… ${esc(q.text)}</span>`).join('') : 'Noch kein Titel. Das kann sich im Lauf des Abends ändern.'}</dd>
+      ${lead ? `<dt>Deine Titel</dt><dd>${titles.length ? titles.map(q => `<span>… ${esc(q.text)}</span>`).join('') : 'Noch kein Titel. Das kann sich im Lauf des Abends ändern.'}</dd>` : ''}
       <dt>Eingereichte Fragen</dt><dd>${sub}</dd>
     </dl><div class="lights"></div></div>
-  <p class="note">${fin ? 'Das ist der Endstand des Abends.' : 'Stand von ' + time + ' Uhr.'} Titel zählen nur bei Fragen, bei denen du selbst abgestimmt hast. Mach ein Bildschirmfoto, wenn du deinen Abspann behalten willst.</p>
+  <p class="note">${fin ? 'Das ist der Endstand des Abends.' : 'Stand von ' + time + ' Uhr.'}${lead ? ' Titel zählen nur bei Fragen, bei denen du selbst abgestimmt hast.' : ''} Mach ein Bildschirmfoto, wenn du deinen Abspann behalten willst.</p>
   ${det('roles', 'Welche Rollen gibt es?', `<ul class="roles">${ROLE_INFO.map(x => `<li class="${x[0] === role || (lead && x[0] === 'Hauptdarstellerin') ? 'cur' : ''}"><b>${x[0]}</b><span>${x[1]}</span></li>`).join('')}</ul>
   <p class="note">${fin ? 'Dazu kamen ein paar Überraschungsrollen.' : 'Es zählt die oberste Rolle der Liste, die auf dich zutrifft, und sie kann sich den ganzen Abend ändern. Dazu kommen ein paar Überraschungsrollen.'}</p>`)}`;
 }
@@ -3136,7 +3137,7 @@ function vRes(){
     const titles = [];
     const items = voted.map(q => { const t = tally(q.id), top = t.rows.filter(r => r.c === t.rows[0].c);
       if (top.some(r => norm(r.name) === norm(myName()))) titles.push(q.text);
-      return det('w' + q.id, `… ${esc(q.text)}<small>${q.bday ? 'Geburtstagsrunde: ' : ''}${top.map(r => esc(r.name)).join(', ')} mit ${top[0].c} von ${t.total} ${t.total === 1 ? 'Stimme' : 'Stimmen'}</small>`, barsHtml(t)); });
+      return det('w' + q.id, `… ${esc(q.text)}<small>${top.map(r => esc(r.name)).join(', ')} mit ${top[0].c} von ${t.total} ${t.total === 1 ? 'Stimme' : 'Stimmen'}</small>`, barsHtml(t)); });
     if (titles.length) h += `<p><b>Dich nennen die meisten bei:</b> ${titles.map(t => '… ' + esc(t)).join(' ')}</p>`;
     h += items.length ? items.join('') : `<p>Hier erscheint jede Frage, sobald du abgestimmt hast.</p>`;
     const locked = all.length - voted.length;
@@ -3169,7 +3170,6 @@ function vAdmin(){
   const svg = qrSvg(), isFile = location.protocol === 'file:';
   const qRow = (kind, q, n) => `<li><span>${kind === 'ww' ? '… ' : ''}${esc(q.text)}<small>${q.off ? 'Regie' : esc(q.byName || 'Gast')}, ${n} ${kind === 'ww' ? (n === 1 ? 'Stimme' : 'Stimmen') : (n === 1 ? 'Antwort' : 'Antworten')}</small></span><button class="btn ghost small" data-act="del-q" data-kind="${kind}" data-id="${q.id}">Löschen</button></li>`;
   const ww = list(D.ww), quiz = list(D.quiz), players = list(D.players), cands = list(D.cands);
-  const wwN = ww.filter(q => !q.bday), wwB = ww.filter(q => q.bday);
   const wwList = l => l.length ? `<ul class="plain">${l.map(q => qRow('ww', q, Object.keys((D.wwVotes && D.wwVotes[q.id]) || {}).length)).join('')}</ul>` : '<p class="note">Noch keine Fragen.</p>';
   const whenVal = ui.a.when || (d => { const z = x => String(x).padStart(2, '0'); return d.getFullYear() + '-' + z(d.getMonth() + 1) + '-' + z(d.getDate()) + 'T' + z(d.getHours()) + ':' + z(d.getMinutes()); })(new Date(partyAt()));
   const preOn = !!(D.meta && D.meta.pre);
@@ -3183,19 +3183,13 @@ function vAdmin(){
     ${isFile ? `<p class="warn">Diese Seite ist gerade als Datei geöffnet. Andere Handys erreichen sie erst, wenn sie im Internet liegt.</p>` : ''}
     <div class="qr">${svg || ''}</div><p class="url">${esc(joinUrl())}</p>
     <div class="row"><button class="btn" data-act="screen">Leinwand-Ansicht fürs Tablet öffnen</button></div></section>
-  <section class="ticket"><h2>Frage hinzufügen</h2><p class="note">Quizfragen, die du hier anlegst, sehen nur die anderen Gäste im Quiz. Dir selbst werden sie nicht gestellt, weil du die Lösung kennst.</p>${formHtml(true)}</section>
+  <section class="ticket"><h2>Frage hinzufügen</h2><p class="note">Fragen aus der Regie bekommst auch du selbst im Spiel gestellt.</p>${formHtml(true)}</section>
   <section class="ticket"><h2>Fragen verwalten</h2>
-    <h3>Wer würde am ehesten …? (${wwN.length})</h3>${wwList(wwN)}
-    <h3>Geburtstagsrunde (${wwB.length})</h3>${wwList(wwB)}
+    <h3>Wer würde am ehesten …? (${ww.length})</h3>${wwList(ww)}
     <h3>Quiz (${quiz.length})</h3>${quiz.length ? `<ul class="plain">${quiz.map(q => qRow('quiz', q, quizStat(q.id).n)).join('')}</ul>` : '<p class="note">Noch keine Fragen.</p>'}
     ${D.meta && D.meta.seeded ? '' : `<div class="row"><button class="btn ghost" data-act="seed">Beispielfragen zu Film und Serie laden</button></div>`}
     ${D.meta && D.meta.seededQ2 ? '' : `<div class="row"><button class="btn ghost" data-act="seed-quiz2">20 weitere Quizfragen laden</button></div>`}
-    ${D.meta && D.meta.seededB ? '' : `<div class="row"><button class="btn ghost" data-act="seed-bday">Fragen für die Geburtstagsrunde laden</button></div>`}</section>
-  <section class="ticket"><h2>Namen zur Auswahl</h2>
-    <p class="note">Diese Namen stehen bei „Wer würde am ehesten …?“ zur Wahl. Melanie, Alisa und Annika sind immer dabei.</p>
-    <div class="seg"><button class="${!D.meta || D.meta.auto !== false ? 'on' : ''}" data-act="auto" data-v="1">Alle Gäste wählbar</button><button class="${D.meta && D.meta.auto === false ? 'on' : ''}" data-act="auto" data-v="">Nur diese Liste</button></div>
-    ${cands.length ? `<ul class="plain">${cands.map(c => `<li><span>${esc(c.name)}</span><button class="btn ghost small" data-act="del-cand" data-id="${c.id}">Entfernen</button></li>`).join('')}</ul>` : ''}
-    <div class="inline"><input type="text" data-m="a.cand" data-enter="add-cand" maxlength="24" placeholder="Weiterer Name" aria-label="Weiterer Name" value="${esc(ui.a.cand)}"><button class="btn small" data-act="add-cand">Hinzufügen</button></div></section>
+    ${D.meta && D.meta.seededB ? '' : `<div class="row"><button class="btn ghost" data-act="seed-bday">10 weitere Fragen zu „Wer würde am ehesten …?“ laden</button></div>`}</section>
   <section class="ticket"><h2>Gäste (${players.length})</h2>
     <ul class="plain">${players.map(p => `<li><span>${esc(p.name)}${p.char ? `<small>als ${esc(p.char)}</small>` : ''}</span>${p.id === me ? '<small>du</small>' : `<button class="btn ghost small" data-act="del-player" data-id="${p.id}">Entfernen</button>`}</li>`).join('')}</ul></section>
   <section class="ticket"><h2>Kostümfotos (${costumes().length})</h2>
@@ -3256,7 +3250,7 @@ function act(a, ds, ok){
       location.reload(); return;
     case 'join': {
       const name = ui.j.name.trim().replace(/\s+/g, ' ');
-      if (!name){ ui.err = 'Trag deinen Namen ein, damit die anderen dich wählen können.'; break; }
+      if (!name){ ui.err = 'Trag deinen Namen ein, damit du mitspielen kannst.'; break; }
       const ex = Object.keys(D.players || {}).find(p => norm(D.players[p].name) === norm(name));
       if (isFinale()){
         if (ex){ me = ex; LS.set('kq_pid', me); ui.dup = null; ui.tab = 'res'; }
@@ -3324,7 +3318,6 @@ function act(a, ds, ok){
       if (off) base.off = true;
       let text = d.text.trim().replace(/\s+/g, ' ');
       if (d.kind === 'ww' || d.kind === 'bday'){
-        if (d.kind === 'bday'){ if (!off || !ui.admin) break; base.bday = true; }
         text = text.replace(/^wer (von den dreien )?würde am ehesten/i, '').replace(/^[\s.…]+/, '').trim();
         if (!text){ ui.err = 'Schreib auf, was die Person am ehesten tun würde.'; break; }
         if (!/[?!.]$/.test(text)) text += '?';
@@ -3339,7 +3332,7 @@ function act(a, ds, ok){
       if (!correct.length){ ui.err = 'Markiere, welche Antwort richtig ist.'; break; }
       if (!d.multi && correct.length > 1){ ui.err = 'Markiere genau eine richtige Antwort.'; break; }
       ui.draft = newDraft('quiz');
-      toast(off ? 'Frage hinzugefügt. Du selbst bekommst sie nicht gestellt.' : isPre() ? 'Frage eingereicht. Am Partyabend ist sie für alle dabei.' : 'Frage eingereicht – alle anderen können sie jetzt beantworten.');
+      toast(off ? 'Frage hinzugefügt.' : isPre() ? 'Frage eingereicht. Am Partyabend ist sie für alle dabei.' : 'Frage eingereicht – alle anderen können sie jetzt beantworten.');
       Store.write('quiz/' + uid('q'), Object.assign({text, opts:filled.map(x => x.o), correct, multi:!!d.multi}, base)); return;
     }
     case 'pin-set':
@@ -3414,8 +3407,8 @@ function act(a, ds, ok){
     }
     case 'seed-bday': {
       const up = {'meta/seededB': true}, now = Date.now(), name = myName();
-      SEED_BDAY.forEach((t,i) => { up['ww/' + uid('w')] = {text:t, by:me, byName:name, off:true, bday:true, t:now + i}; });
-      toast('Geburtstagsrunde geladen.');
+      SEED_BDAY.forEach((t,i) => { up['ww/' + uid('w')] = {text:t, by:me, byName:name, off:true, t:now + i}; });
+      toast('10 Fragen geladen.');
       Store.write('', up, true); return;
     }
     case 'reset-answers':
